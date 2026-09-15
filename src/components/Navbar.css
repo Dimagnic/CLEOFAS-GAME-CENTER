@@ -1,0 +1,95 @@
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(10, 10, 12, 0.7);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.25s var(--ease), background 0.25s var(--ease);
+}
+.nav--scrolled {
+  border-bottom-color: var(--color-line);
+  background: rgba(10, 10, 12, 0.92);
+}
+
+.nav__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+}
+
+.nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.nav__mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+.nav__brand-accent { color: var(--color-ink-muted); font-weight: 400; }
+
+.nav__links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--step--1);
+}
+.nav__links a { color: var(--color-ink-muted); transition: color 0.2s var(--ease); }
+.nav__links a:hover { color: var(--color-ink); }
+
+.nav__admin-link {
+  padding: 0.55em 1.1em;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sharp);
+  color: var(--color-ink) !important;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+.nav__admin-link:hover { border-color: var(--color-accent); color: var(--color-accent) !important; }
+
+.nav__toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px;
+}
+.nav__toggle span {
+  width: 22px;
+  height: 2px;
+  background: var(--color-ink);
+  display: block;
+}
+
+@media (max-width: 860px) {
+  .nav__toggle { display: flex; }
+  .nav__links {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--color-bg-raised);
+    border-bottom: 1px solid var(--color-line);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s var(--ease);
+  }
+  .nav__links--open { max-height: 320px; }
+  .nav__links a, .nav__admin-link {
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--color-line);
+    border-radius: 0;
+  }
+}

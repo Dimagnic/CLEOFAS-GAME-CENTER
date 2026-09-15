@@ -1,0 +1,31 @@
+.contact__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+  align-items: center;
+}
+.contact__title { font-size: var(--step-2); margin: var(--space-1) 0 var(--space-3); }
+
+.contact__list { list-style: none; padding: 0; margin: 0 0 var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); }
+.contact__list li { color: var(--color-ink-muted); font-size: var(--step--1); }
+.contact__list strong { display: block; color: var(--color-ink); font-family: var(--font-mono); font-size: 0.78rem; margin-bottom: 2px; }
+
+.contact__map {
+  aspect-ratio: 4/3;
+  border-radius: var(--radius-soft);
+  border: 1px solid var(--color-line);
+  background:
+    linear-gradient(135deg, var(--color-bg-raised) 25%, transparent 25%) 0 0/24px 24px,
+    linear-gradient(225deg, var(--color-bg-raised) 25%, transparent 25%) 0 0/24px 24px,
+    var(--color-bg-raised-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-ink-faint);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 800px) {
+  .contact__grid { grid-template-columns: 1fr; }
+}

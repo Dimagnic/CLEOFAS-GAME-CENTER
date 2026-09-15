@@ -1,0 +1,43 @@
+:root {
+  /* Color — tomado directo del logo: negro real, líneas blancas, azul-grisáceo de acento */
+  --color-bg: #0A0A0C;
+  --color-bg-raised: #131319;
+  --color-bg-raised-2: #1B1B24;
+  --color-ink: #F5F6FA;
+  --color-ink-muted: #9298B5;
+  --color-ink-faint: #5D6280;
+
+  --color-accent: #4C6FFF;   /* azul LED — acciones primarias */
+  --color-accent-ink: #050714;
+  --color-ok: #35D68F;       /* estación libre */
+  --color-warn: #FFB238;     /* por terminar */
+  --color-busy: #FF4D6D;     /* en sesión / ocupado */
+
+  --color-line: rgba(245, 246, 250, 0.12);
+  --color-line-strong: rgba(245, 246, 250, 0.24);
+
+  /* Tipografía — geométrica y "de circuito", como el trazo del logo */
+  --font-display: "Chakra Petch", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, monospace;
+
+  --step--1: clamp(0.83rem, 0.8rem + 0.15vw, 0.9rem);
+  --step-0: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --step-1: clamp(1.25rem, 1.15rem + 0.4vw, 1.5rem);
+  --step-2: clamp(1.6rem, 1.4rem + 0.8vw, 2.1rem);
+  --step-3: clamp(2.1rem, 1.7rem + 1.6vw, 3.2rem);
+  --step-4: clamp(2.6rem, 2rem + 2.6vw, 4.4rem);
+
+  --space-1: 0.5rem;
+  --space-2: 0.875rem;
+  --space-3: 1.5rem;
+  --space-4: 2.5rem;
+  --space-5: 4rem;
+  --space-6: 6.5rem;
+
+  --radius-soft: 18px;
+  --radius-sharp: 3px;
+  --content-width: 1180px;
+
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
