@@ -1,4 +1,4 @@
-.admin { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; background: var(--color-bg); }
+﻿.admin { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; background: var(--color-bg); }
 
 .admin__sidebar {
   border-right: 1px solid var(--color-line);
@@ -139,7 +139,21 @@
 .admin-modal__actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
 
 /* Login */
-.admin-login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: var(--space-3); }
+.admin-login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: var(--space-3); position: relative; }
+.admin-login__back {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  color: var(--color-ink-muted);
+  font-size: var(--step--1);
+  padding: 0.5em 0.2em;
+}
+.admin-login__back span { font-size: 1.1em; transition: transform 0.2s var(--ease); }
+.admin-login__back:hover { color: var(--color-ink); }
+.admin-login__back:hover span { transform: translateX(-3px); }
 .admin-login__card {
   width: 100%;
   max-width: 360px;
@@ -182,3 +196,4 @@
   .admin__content { padding: var(--space-3); }
   .admin-cards { grid-template-columns: repeat(2, 1fr); }
 }
+
