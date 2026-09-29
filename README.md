@@ -80,3 +80,36 @@ git push -u origin main
   confirma.
 - Reportes de ocupación por semana en el panel, usando los datos ya
   guardados en `cierres`.
+
+## Pagos en línea (Stripe) y reservas sin traslapes
+
+La reservación ahora se **paga en línea**: el cliente elige estación, día y hora
+(solo ve horarios libres), paga con tarjeta en Stripe y recibe su folio. El pago
+lo maneja Stripe; nosotros nunca vemos datos de tarjeta.
+
+Cómo funciona: `Booking.jsx` → `/api/checkout` (función en Vercel) crea la reservación
+como `pendiente_pago` (horario apartado 31 min) y manda al cliente a Stripe →
+Stripe avisa a `/api/stripe-webhook` → la reservación pasa a `confirmada` (pagada).
+Si no paga, el horario se libera solo. El precio siempre lo calcula el servidor.
+
+### Puesta en marcha
+1. En Supabase → SQL Editor, ejecuta `supabase/migration-pagos.sql` (después de `schema.sql`).
+   Además quita la posibilidad de insertar reservas desde el navegador y evita
+   dobles reservas a nivel de base de datos.
+2. Crea tu cuenta en [stripe.com](https://stripe.com) (México, MXN). Copia la *Secret key* (`sk_test_...` para probar).
+3. En Vercel → Settings → Environment Variables agrega: `SUPABASE_SERVICE_ROLE_KEY`
+   (Supabase → Project Settings → API → service_role; **secreta, sin prefijo VITE_**),
+   `STRIPE_SECRET_KEY` y `STRIPE_WEBHOOK_SECRET`, además de las dos `VITE_SUPABASE_*` que ya tienes.
+4. En Stripe → Developers → Webhooks → *Add endpoint*:
+   URL `https://TU-DOMINIO/api/stripe-webhook`, eventos `checkout.session.completed`,
+   `checkout.session.expired`, `checkout.session.async_payment_succeeded` y
+   `checkout.session.async_payment_failed`. Copia el *Signing secret* (`whsec_...`) a `STRIPE_WEBHOOK_SECRET`.
+5. `npm install` y sube a GitHub; Vercel despliega solo. Prueba con la tarjeta `4242 4242 4242 4242`
+   (cualquier fecha futura y CVC) antes de cambiar a las llaves reales (`sk_live_...`).
+
+Las funciones `/api` no corren con `npm run dev`. Para probar en local usa `npx vercel dev`.
+
+### Ajustes rápidos
+- Horario, estaciones, máximo de horas y tarifas: `api/_lib/reglas.js` (y lo mismo en `src/lib/reservas.js`).
+- Reembolsos: se hacen desde el panel de Stripe. Cancelar en `/panel/reservaciones` solo libera el horario.
+- `vercel.json` hace que `/panel` funcione al recargar la página.

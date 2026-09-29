@@ -83,3 +83,34 @@
 @media (max-width: 480px) {
   .booking__row { grid-template-columns: 1fr; }
 }
+
+/* --- Reserva con pago en línea --- */
+.estado-pill--pendiente_pago { background: rgba(255, 178, 56, 0.15); color: var(--color-warn); }
+.estado-pill--cancelada,
+.estado-pill--expirada { background: rgba(255, 77, 109, 0.15); color: var(--color-busy); }
+
+.booking__slotsbox { display: flex; flex-direction: column; gap: 8px; }
+.booking__slotslabel { font-size: var(--step--1); color: var(--color-ink-muted); }
+.booking__slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; }
+.slot {
+  padding: 0.6em 0;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sharp);
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.slot:hover:not(:disabled) { border-color: var(--color-accent); }
+.slot.is-active { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
+.slot:disabled { opacity: 0.3; cursor: not-allowed; text-decoration: line-through; }
+
+.booking__error { color: var(--color-busy); font-size: var(--step--1); margin: 0; }
+.booking__form .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.booking__resumen { margin: var(--space-2) 0; display: flex; flex-direction: column; gap: 8px; }
+.booking__resumen > div { display: flex; justify-content: space-between; border-bottom: 1px solid var(--color-line); padding-bottom: 8px; }
+.booking__resumen dt { color: var(--color-ink-faint); font-size: var(--step--1); }
+.booking__resumen dd { margin: 0; font-weight: 600; }
