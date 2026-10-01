@@ -1,8 +1,9 @@
-import { ESTACIONES } from '../data/mockData'
+import { useEstacionesPublicas } from '../lib/estacionesPublicas'
 import './Hero.css'
 
 export default function Hero() {
-  const libres = ESTACIONES.filter((e) => e.estado === 'libre').length
+  const { estaciones } = useEstacionesPublicas()
+  const libres = estaciones.filter((e) => e.estado === 'libre').length
 
   return (
     <section className="hero">
@@ -39,10 +40,10 @@ export default function Hero() {
           </div>
           <div className="hero__panel-big">
             {libres}
-            <span> de {ESTACIONES.length} libres</span>
+            <span> de {estaciones.length} libres</span>
           </div>
           <div className="hero__mini-grid">
-            {ESTACIONES.slice(0, 10).map((e) => (
+            {estaciones.slice(0, 10).map((e) => (
               <div key={e.id} className={`hero__cell hero__cell--${e.estado}`} title={`${e.id} · ${e.estado}`}>
                 {e.id.split('-')[1]}
               </div>

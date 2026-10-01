@@ -3,7 +3,7 @@ import { useStations } from '../../lib/StationsStore'
 import { TARIFAS } from '../../data/mockData'
 
 export default function StationsControl() {
-  const { estaciones, iniciarSesion, finalizarSesion, marcarMantenimiento, liberar } = useStations()
+  const { estaciones, errorSync, iniciarSesion, finalizarSesion, marcarMantenimiento, liberar } = useStations()
   const [abriendo, setAbriendo] = useState(null)
 
   return (
@@ -12,6 +12,12 @@ export default function StationsControl() {
         <h1>Control de estaciones</h1>
         <p>Inicia y cierra sesiones sin cronómetro ni cuaderno: el tiempo corre solo.</p>
       </header>
+
+      {errorSync && (
+        <p className="admin-note">
+          No se pudo sincronizar con la base de datos ({errorSync}). Revisa que ejecutaste <code>supabase/migration-estaciones.sql</code>.
+        </p>
+      )}
 
       <div className="admin-stations">
         {estaciones.map((e) => (

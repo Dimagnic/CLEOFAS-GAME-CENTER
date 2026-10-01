@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ESTACIONES } from '../data/mockData'
+import { useEstacionesPublicas } from '../lib/estacionesPublicas'
 import {
   HORA_ABRE, HORA_CIERRA, MAX_HORAS, precioPorHoras, ahoraMX, sumarDias, api,
 } from '../lib/reservas'
 import './Booking.css'
-
-const libres = ESTACIONES.filter((e) => e.estado !== 'mantenimiento')
 
 export default function Booking() {
   const [tab, setTab] = useState('reservar')
@@ -59,6 +57,8 @@ export default function Booking() {
 
 function FormReserva() {
   const hoy = useMemo(() => ahoraMX(), [])
+  const { estaciones } = useEstacionesPublicas()
+  const libres = estaciones.filter((e) => e.estado !== 'mantenimiento')
   const [estacion, setEstacion] = useState('')
   const [fecha, setFecha] = useState(hoy.fecha)
   const [duracion, setDuracion] = useState(1)

@@ -1,4 +1,4 @@
-import { ESTACIONES } from '../data/mockData'
+import { useEstacionesPublicas } from '../lib/estacionesPublicas'
 import './StationsBoard.css'
 
 const ETIQUETA = {
@@ -8,6 +8,8 @@ const ETIQUETA = {
 }
 
 export default function StationsBoard() {
+  const { estaciones, cargando, error } = useEstacionesPublicas()
+
   return (
     <section id="estaciones" className="section stations">
       <div className="wrap">
@@ -22,8 +24,11 @@ export default function StationsBoard() {
           </p>
         </div>
 
+        {cargando && <p className="stations__note">Cargando disponibilidad…</p>}
+        {error && <p className="stations__note">No pudimos cargar la disponibilidad ahora. Intenta de nuevo en un momento.</p>}
+
         <div className="stations__grid">
-          {ESTACIONES.map((e) => (
+          {estaciones.map((e) => (
             <article key={e.id} className={`station-card station-card--${e.estado}`}>
               <div className="station-card__top">
                 <span className="station-card__id">{e.id}</span>
@@ -32,7 +37,7 @@ export default function StationsBoard() {
               <p className="station-card__type">{e.tipo}</p>
               <p className="station-card__specs">{e.specs}</p>
               {e.estado === 'sesion' && (
-                <p className="station-card__timer">Libre en ~{e.restanteMin} min</p>
+                <p className="station-card__timer">{e.restanteMin > 0 ? `Libre en ~${e.restanteMin} min` : 'Por liberarse'}</p>
               )}
             </article>
           ))}

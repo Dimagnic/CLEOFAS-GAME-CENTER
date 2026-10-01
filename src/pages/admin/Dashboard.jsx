@@ -1,6 +1,8 @@
-import { ESTACIONES, RESERVACIONES, RESUMEN_HOY } from '../../data/mockData'
+import { RESERVACIONES, RESUMEN_HOY } from '../../data/mockData'
+import { useStations } from '../../lib/StationsStore'
 
 export default function Dashboard() {
+  const { estaciones: ESTACIONES } = useStations()
   const libres = ESTACIONES.filter((e) => e.estado === 'libre').length
   const enSesion = ESTACIONES.filter((e) => e.estado === 'sesion').length
 
@@ -14,7 +16,7 @@ export default function Dashboard() {
       <div className="admin-cards">
         <div className="admin-card">
           <p className="admin-card__label">Ocupación</p>
-          <p className="admin-card__value">{Math.round((enSesion / ESTACIONES.length) * 100)}%</p>
+          <p className="admin-card__value">{ESTACIONES.length ? Math.round((enSesion / ESTACIONES.length) * 100) : 0}%</p>
         </div>
         <div className="admin-card">
           <p className="admin-card__label">Estaciones libres</p>
