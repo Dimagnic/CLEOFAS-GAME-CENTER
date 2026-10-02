@@ -11,6 +11,8 @@
 .contact__list strong { display: block; color: var(--color-ink); font-family: var(--font-mono); font-size: 0.78rem; margin-bottom: 2px; }
 
 .contact__map {
+  position: relative;
+  overflow: hidden;
   aspect-ratio: 4/3;
   border-radius: var(--radius-soft);
   border: 1px solid var(--color-line);
@@ -33,3 +35,19 @@
 .contact__list a { color: var(--color-ink); }
 .contact__list a:hover { color: var(--color-accent); }
 .contact__redes { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+.contact__map iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.contact__ruta {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  padding: 0.55em 1em;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.contact__ruta:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(76, 111, 255, 0.55); }

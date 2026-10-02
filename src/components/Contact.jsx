@@ -1,4 +1,4 @@
-import { NEGOCIO, whatsappUrl } from '../data/negocio'
+import { NEGOCIO, MAPA_EMBED, MAPA_LINK, whatsappUrl } from '../data/negocio'
 import './Contact.css'
 
 export default function Contact() {
@@ -30,8 +30,15 @@ export default function Contact() {
             Escribir por WhatsApp
           </a>
         </div>
-        <div className="contact__map" role="img" aria-label="Mapa de ubicación de Cleofas Game Center">
-          <span>Mapa · Centro de Puebla</span>
+        <div className="contact__map">
+          <iframe
+            title="Mapa de ubicación de Cleofas Game Center"
+            src={MAPA_EMBED}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            allowFullScreen
+          />
+          <a className="contact__ruta" href={MAPA_LINK} target="_blank" rel="noopener noreferrer">Cómo llegar</a>
         </div>
       </div>
     </section>

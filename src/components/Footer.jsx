@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { NEGOCIO, whatsappUrl } from '../data/negocio'
+import { NEGOCIO, MAPA_LINK, whatsappUrl } from '../data/negocio'
 import './Footer.css'
 
 const ENLACES = [
@@ -33,7 +33,7 @@ export default function Footer() {
         <div className="footer__col">
           <h3>Contacto</h3>
           <ul>
-            <li>{NEGOCIO.direccion}</li>
+            <li><a href={MAPA_LINK} target="_blank" rel="noopener noreferrer">{NEGOCIO.direccion}</a></li>
             <li>{NEGOCIO.horario}</li>
             <li><a href={`tel:${NEGOCIO.telefonoLink}`}>Tel: {NEGOCIO.telefono}</a></li>
             <li><a href={whatsappUrl()} target="_blank" rel="noopener noreferrer">WhatsApp: {NEGOCIO.telefono}</a></li>
