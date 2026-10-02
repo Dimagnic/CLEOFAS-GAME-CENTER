@@ -1,4 +1,5 @@
 import { useEstacionesPublicas } from '../lib/estacionesPublicas'
+import { NEGOCIO } from '../data/negocio'
 import './Hero.css'
 
 export default function Hero() {
@@ -9,7 +10,7 @@ export default function Hero() {
     <section className="hero">
       <div className="wrap hero__grid">
         <div className="hero__copy">
-          <p className="eyebrow">Puebla · Abierto 11:00–23:00</p>
+          <p className="eyebrow">Puebla · Abierto {NEGOCIO.horarioCorto}</p>
           <h1 className="hero__title">
             Tu estación te espera,
             <br />

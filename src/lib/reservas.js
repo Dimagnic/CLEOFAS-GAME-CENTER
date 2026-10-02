@@ -1,7 +1,7 @@
 // Lo que el cliente ve en pantalla. El servidor (api/_lib/reglas.js) valida y recalcula todo;
 // estas constantes deben coincidir con las de allá.
-export const HORA_ABRE = 11
-export const HORA_CIERRA = 23
+export const HORA_ABRE = 9
+export const HORA_CIERRA = 22
 export const MAX_HORAS = 5
 export const PASO_MIN = 5
 export const MARGEN_MIN = 0 // descanso entre un cliente y el siguiente (0 = sin margen)

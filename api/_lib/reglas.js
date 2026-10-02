@@ -4,8 +4,8 @@
 
 export const CFG = {
   ESTACIONES: ['PC-01', 'PC-02', 'PC-03', 'PC-04', 'PC-05', 'PC-06', 'PC-07', 'PC-08', 'PS-01', 'PS-02'],
-  HORA_ABRE: 11,           // 11:00
-  HORA_CIERRA: 23,         // 23:00
+  HORA_ABRE: 9,            // 09:00
+  HORA_CIERRA: 22,         // 22:00
   MAX_HORAS: 5,
   HOLD_MIN: 31,            // minutos que se aparta el horario mientras el cliente paga
   DIAS_ADELANTE: 60,
@@ -68,7 +68,7 @@ export function validarReserva(b, ahora = Date.now()) {
   const dur = Number(b.duracion)
   if (!Number.isInteger(dur) || dur < 1 || dur > CFG.MAX_HORAS) return `Puedes reservar de 1 a ${CFG.MAX_HORAS} horas.`
   if (!Number.isInteger(ini) || ini % CFG.PASO_MIN !== 0 || ini < CFG.HORA_ABRE * 60 || ini + dur * 60 > CFG.HORA_CIERRA * 60) {
-    return `Nuestro horario es de ${CFG.HORA_ABRE}:00 a ${CFG.HORA_CIERRA}:00.`
+    return `Nuestro horario es de ${String(CFG.HORA_ABRE).padStart(2, '0')}:00 a ${CFG.HORA_CIERRA}:00.`
   }
   const inicio = inicioMX(b.fecha, ini)
   if (inicio.getTime() <= ahora) return 'Ese horario ya pasó. Elige otro.'

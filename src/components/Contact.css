@@ -29,3 +29,7 @@
 @media (max-width: 800px) {
   .contact__grid { grid-template-columns: 1fr; }
 }
+
+.contact__list a { color: var(--color-ink); }
+.contact__list a:hover { color: var(--color-accent); }
+.contact__redes { display: flex; gap: 1rem; flex-wrap: wrap; }

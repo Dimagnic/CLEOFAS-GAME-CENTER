@@ -1,3 +1,4 @@
+import { NEGOCIO, whatsappUrl } from '../data/negocio'
 import './Contact.css'
 
 export default function Contact() {
@@ -8,15 +9,23 @@ export default function Contact() {
           <p className="eyebrow">Ubicación</p>
           <h2 className="contact__title">Encuéntranos</h2>
           <ul className="contact__list">
-            <li><strong>Dirección</strong>Av. Reforma 000, Centro, Puebla, Pue.</li>
-            <li><strong>Horario</strong>Todos los días, 11:00 a 23:00</li>
-            <li><strong>WhatsApp</strong>222 000 0000</li>
+            <li><strong>Dirección</strong>{NEGOCIO.direccion}</li>
+            <li><strong>Horario</strong>{NEGOCIO.horario}</li>
+            <li><strong>Teléfono y WhatsApp</strong><a href={`tel:${NEGOCIO.telefonoLink}`}>{NEGOCIO.telefono}</a></li>
+            <li>
+              <strong>Síguenos</strong>
+              <span className="contact__redes">
+                <a href={NEGOCIO.redes.tiktok} target="_blank" rel="noopener noreferrer">TikTok</a>
+                <a href={NEGOCIO.redes.instagram} target="_blank" rel="noopener noreferrer">Instagram</a>
+                <a href={NEGOCIO.redes.facebook} target="_blank" rel="noopener noreferrer">Facebook</a>
+              </span>
+            </li>
           </ul>
           <a
             className="btn btn-primary"
-            href="https://wa.me/522220000000"
+            href={whatsappUrl()}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
           >
             Escribir por WhatsApp
           </a>

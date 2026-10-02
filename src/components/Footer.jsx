@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { NEGOCIO, whatsappUrl } from '../data/negocio'
 import './Footer.css'
 
 const ENLACES = [
@@ -32,10 +33,14 @@ export default function Footer() {
         <div className="footer__col">
           <h3>Contacto</h3>
           <ul>
-            <li>Av. Reforma 000, Centro, Puebla, Pue.</li>
-            <li>Todos los días, 11:00 a 23:00</li>
-            <li>
-              <a href="https://wa.me/522220000000" target="_blank" rel="noreferrer">WhatsApp: 222 000 0000</a>
+            <li>{NEGOCIO.direccion}</li>
+            <li>{NEGOCIO.horario}</li>
+            <li><a href={`tel:${NEGOCIO.telefonoLink}`}>Tel: {NEGOCIO.telefono}</a></li>
+            <li><a href={whatsappUrl()} target="_blank" rel="noopener noreferrer">WhatsApp: {NEGOCIO.telefono}</a></li>
+            <li className="footer__redes">
+              <a href={NEGOCIO.redes.tiktok} target="_blank" rel="noopener noreferrer">TikTok</a>
+              <a href={NEGOCIO.redes.instagram} target="_blank" rel="noopener noreferrer">Instagram</a>
+              <a href={NEGOCIO.redes.facebook} target="_blank" rel="noopener noreferrer">Facebook</a>
             </li>
           </ul>
         </div>
@@ -46,7 +51,9 @@ export default function Footer() {
         <Link to="/panel" className="footer__admin">Panel del negocio</Link>
         <div className="footer__dev">
           <span>Desarrollado por</span>
-          <img src="/logo-cero-claro.png" alt="Cero+" height="38" />
+          <a href={NEGOCIO.desarrolladoPor.url} target="_blank" rel="noopener noreferrer" className="footer__cero" aria-label="Cero+, desarrollador del sitio">
+            <img src="/logo-cero-claro.png" alt="Cero+" height="38" />
+          </a>
         </div>
       </div>
     </footer>

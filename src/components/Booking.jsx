@@ -145,7 +145,7 @@ function FormReserva() {
         </label>
         <label>
           Teléfono (opcional)
-          <input type="tel" name="telefono" placeholder="222 000 0000" />
+          <input type="tel" name="telefono" placeholder="56 4625 3958" />
         </label>
       </div>
 
@@ -215,7 +215,7 @@ function FormReserva() {
       </button>
       <p className="booking__hint">
         Pago seguro con Stripe. Tu horario se aparta 30 minutos mientras pagas.
-        Horario: todos los días de {HORA_ABRE}:00 a {HORA_CIERRA}:00. Si ves una hora como 12:10 con borde punteado,
+        Horario: todos los días de {String(HORA_ABRE).padStart(2, '0')}:00 a {HORA_CIERRA}:00. Si ves una hora como 12:10 con borde punteado,
         es el momento exacto en que se libera esa estación.
       </p>
     </form>
