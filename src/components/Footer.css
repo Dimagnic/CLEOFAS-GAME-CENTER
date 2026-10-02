@@ -1,24 +1,55 @@
+/* Pie de página: fondo igual al del logo de Cero+ (#F7F7F7) y todo el texto en negro. */
 .footer {
-  border-top: 1px solid var(--color-line);
-  padding: var(--space-4) 0;
+  background: #f7f7f7;
+  color: #000;
+  padding: var(--space-5, 56px) 0 var(--space-3, 24px);
+  font-family: var(--font-body);
+  font-size: 0.92rem;
 }
-.footer__row {
+.footer h3,
+.footer p,
+.footer li,
+.footer a,
+.footer span { color: #000; }
+
+.footer__grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1.4fr;
+  gap: var(--space-4, 40px);
+  padding-bottom: var(--space-4, 40px);
+  border-bottom: 1px solid #000;
+}
+.footer__col p { margin: 0.8rem 0 0; line-height: 1.55; max-width: 38ch; }
+.footer__col h3 {
+  margin: 0 0 0.9rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.footer__col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; }
+.footer__brand { display: flex; align-items: center; gap: 0.7rem; font-family: var(--font-display); font-weight: 600; letter-spacing: 0.04em; }
+.footer__brand img { border-radius: 8px; }
+
+.footer a { text-decoration: none; }
+.footer a:hover,
+.footer a:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
+
+.footer__bottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-3, 24px);
   flex-wrap: wrap;
-  color: var(--color-ink-faint);
+  padding-top: var(--space-3, 24px);
   font-size: 0.82rem;
 }
-.footer__brand {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-family: var(--font-display);
-  color: var(--color-ink-muted);
-  letter-spacing: 0.04em;
+.footer__bottom p { margin: 0; }
+.footer__admin { text-decoration: underline !important; text-underline-offset: 3px; }
+.footer__dev { display: flex; align-items: center; gap: 0.75rem; }
+.footer__dev img { display: block; height: 34px; width: auto; }
+
+@media (max-width: 800px) {
+  .footer__grid { grid-template-columns: 1fr; gap: var(--space-3, 24px); }
+  .footer__bottom { flex-direction: column; align-items: flex-start; }
 }
-.footer__brand img { width: 24px; height: 24px; border-radius: 6px; }
-.footer__admin { color: var(--color-ink-faint); text-decoration: underline; text-underline-offset: 3px; }
-.footer__admin:hover { color: var(--color-accent); }
