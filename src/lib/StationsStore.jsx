@@ -27,7 +27,7 @@ export function StationsProvider({ children }) {
     ESTACIONES.map((e) => ({ ...e, finMs: e.estado === 'sesion' ? Date.now() + e.restanteMin * 60000 : null }))
   )
   const [cierresHoy, setCierresHoy] = useState([])
-  const [reservas, setReservas] = useState([]) // reservas en línea de las próximas 24 h
+  const [reservas, setReservas] = useState([]) // reservas en línea de los próximos 7 días
   const [, setTick] = useState(0)
   const [errorSync, setErrorSync] = useState('')
 
@@ -38,12 +38,13 @@ export function StationsProvider({ children }) {
       supabase.from('estaciones').select('*').order('id'),
       supabase.from('cierres').select('*').gte('created_at', inicioDeHoyMX()).order('created_at', { ascending: false }),
       supabase.from('reservaciones')
-        .select('estacion, cliente, inicio, fin, estado, expires_at')
+        .select('folio, estacion, cliente, inicio, fin, estado, expires_at')
         .in('estado', ['confirmada', 'pendiente_pago'])
         .not('inicio', 'is', null)
         .gte('fin', new Date(ahora).toISOString())
-        .lte('inicio', new Date(ahora + 24 * 3600000).toISOString())
-        .order('inicio'),
+        .lte('inicio', new Date(ahora + 7 * 24 * 3600000).toISOString())
+        .order('inicio')
+        .limit(50),
     ])
     if (est.error) { setErrorSync(est.error.message); return }
     setErrorSync('')
@@ -56,7 +57,7 @@ export function StationsProvider({ children }) {
         // un pago pendiente que ya venció no bloquea nada
         .filter((r) => r.estado !== 'pendiente_pago' || !r.expires_at || new Date(r.expires_at).getTime() > ahora)
         .map((r) => ({
-          estacion: r.estacion, cliente: r.cliente, estado: r.estado,
+          folio: r.folio, estacion: r.estacion, cliente: r.cliente, estado: r.estado,
           iniMs: new Date(r.inicio).getTime(), finMs: new Date(r.fin).getTime(),
         })))
     }
@@ -145,7 +146,7 @@ export function StationsProvider({ children }) {
 
   return (
     <StationsContext.Provider
-      value={{ estaciones, cierresHoy, errorSync, reservasDe, iniciarSesion, finalizarSesion, marcarMantenimiento, liberar }}
+      value={{ estaciones, cierresHoy, errorSync, enLinea, reservas, reservasDe, iniciarSesion, finalizarSesion, marcarMantenimiento, liberar }}
     >
       {children}
     </StationsContext.Provider>

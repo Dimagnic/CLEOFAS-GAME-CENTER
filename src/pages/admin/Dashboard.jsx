@@ -1,10 +1,28 @@
 import { RESERVACIONES, RESUMEN_HOY } from '../../data/mockData'
 import { useStations } from '../../lib/StationsStore'
 
+const ETIQUETAS = { confirmada: 'pagada', pendiente_pago: 'esperando pago', pendiente: 'pendiente' }
+
+const cuando = (ms) =>
+  new Date(ms).toLocaleString('es-MX', {
+    weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+    timeZone: 'America/Mexico_City',
+  })
+
 export default function Dashboard() {
-  const { estaciones: ESTACIONES } = useStations()
+  const { estaciones: ESTACIONES, enLinea, reservas, cierresHoy } = useStations()
   const libres = ESTACIONES.filter((e) => e.estado === 'libre').length
   const enSesion = ESTACIONES.filter((e) => e.estado === 'sesion').length
+
+  // Con Supabase conectado todo es real; en modo demo se muestran datos de ejemplo.
+  const proximas = enLinea
+    ? reservas.map((r) => ({ folio: r.folio, cliente: r.cliente, estacion: r.estacion, cuando: cuando(r.iniMs), estado: r.estado }))
+    : RESERVACIONES.map((r) => ({ ...r, cuando: `${r.fecha} · ${r.hora}` }))
+
+  const totalCobrado = cierresHoy.reduce((s, c) => s + (c.precio || 0), 0)
+  const ticket = enLinea
+    ? (cierresHoy.length ? `$${Math.round(totalCobrado / cierresHoy.length)}` : '—')
+    : `$${RESUMEN_HOY.ticketPromedio}`
 
   return (
     <div>
@@ -24,32 +42,36 @@ export default function Dashboard() {
         </div>
         <div className="admin-card">
           <p className="admin-card__label">Reservaciones próximas</p>
-          <p className="admin-card__value">{RESERVACIONES.length}</p>
+          <p className="admin-card__value">{proximas.length}</p>
         </div>
         <div className="admin-card">
           <p className="admin-card__label">Ticket promedio</p>
-          <p className="admin-card__value">${RESUMEN_HOY.ticketPromedio}</p>
+          <p className="admin-card__value">{ticket}</p>
         </div>
       </div>
 
       <section className="admin-section">
         <h2>Próximas reservaciones</h2>
-        <table className="admin-table">
-          <thead>
-            <tr><th>Folio</th><th>Cliente</th><th>Estación</th><th>Cuándo</th><th>Estado</th></tr>
-          </thead>
-          <tbody>
-            {RESERVACIONES.map((r) => (
-              <tr key={r.folio}>
-                <td className="mono">{r.folio}</td>
-                <td>{r.cliente}</td>
-                <td>{r.estacion}</td>
-                <td>{r.fecha} · {r.hora}</td>
-                <td><span className={`estado-pill estado-pill--${r.estado}`}>{r.estado}</span></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {proximas.length === 0 ? (
+          <p className="admin-note">No hay reservaciones en línea próximas. Cuando alguien reserve y pague, aparecerá aquí.</p>
+        ) : (
+          <table className="admin-table">
+            <thead>
+              <tr><th>Folio</th><th>Cliente</th><th>Estación</th><th>Cuándo</th><th>Estado</th></tr>
+            </thead>
+            <tbody>
+              {proximas.map((r) => (
+                <tr key={r.folio}>
+                  <td className="mono">{r.folio}</td>
+                  <td>{r.cliente}</td>
+                  <td>{r.estacion}</td>
+                  <td>{r.cuando}</td>
+                  <td><span className={`estado-pill estado-pill--${r.estado}`}>{ETIQUETAS[r.estado] ?? r.estado}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </section>
     </div>
   )
