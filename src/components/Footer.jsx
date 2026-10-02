@@ -46,7 +46,7 @@ export default function Footer() {
         <Link to="/panel" className="footer__admin">Panel del negocio</Link>
         <div className="footer__dev">
           <span>Desarrollado por</span>
-          <img src="/logo-cero.jpg" alt="Cero+" height="34" />
+          <img src="/logo-cero-claro.png" alt="Cero+" height="38" />
         </div>
       </div>
     </footer>
