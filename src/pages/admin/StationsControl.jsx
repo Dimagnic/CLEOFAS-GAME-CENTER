@@ -2,8 +2,11 @@ import { useState } from 'react'
 import { useStations } from '../../lib/StationsStore'
 import { TARIFAS } from '../../data/mockData'
 
+const MIN_TARIFA = { hora: 60, paq3: 180, paq5: 300 }
+const hora = (ms) => new Date(ms).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Mexico_City' })
+
 export default function StationsControl() {
-  const { estaciones, errorSync, iniciarSesion, finalizarSesion, marcarMantenimiento, liberar } = useStations()
+  const { estaciones, errorSync, reservasDe, iniciarSesion, finalizarSesion, marcarMantenimiento, liberar } = useStations()
   const [abriendo, setAbriendo] = useState(null)
 
   return (
@@ -52,6 +55,12 @@ export default function StationsControl() {
               </div>
             )}
 
+            {reservasDe(e.id)[0] && (
+              <p className="admin-station__reserva">
+                Reserva en línea: {hora(reservasDe(e.id)[0].iniMs)}–{hora(reservasDe(e.id)[0].finMs)} · {reservasDe(e.id)[0].cliente.split(' ')[0]}
+              </p>
+            )}
+
             {e.estado === 'libre' && (
               <button className="admin-station__maint" onClick={() => marcarMantenimiento(e.id)}>
                 Enviar a mantenimiento
@@ -64,6 +73,7 @@ export default function StationsControl() {
       {abriendo && (
         <IniciarSesionModal
           estacionId={abriendo}
+          reserva={reservasDe(abriendo)[0]}
           onClose={() => setAbriendo(null)}
           onConfirm={(datos) => {
             iniciarSesion(abriendo, datos)
@@ -75,26 +85,48 @@ export default function StationsControl() {
   )
 }
 
-function IniciarSesionModal({ estacionId, onClose, onConfirm }) {
+function IniciarSesionModal({ estacionId, reserva, onClose, onConfirm }) {
+  const [tarifaId, setTarifaId] = useState(TARIFAS[0].id)
+
+  // ¿Hay una reserva en línea que se empalme con la sesión que estás por iniciar?
+  const ahora = Date.now()
+  const enCurso = reserva && reserva.iniMs <= ahora
+  const minutosLibres = reserva && !enCurso ? Math.floor((reserva.iniMs - ahora) / 60000) : null
+  const choca = (id) => reserva && (enCurso || ahora + (MIN_TARIFA[id] ?? 60) * 60000 > reserva.iniMs)
+  const nombreReserva = reserva?.cliente.split(' ')[0]
+
   function onSubmit(e) {
     e.preventDefault()
     const form = new FormData(e.target)
-    onConfirm({ cliente: form.get('cliente'), tarifaId: form.get('tarifa') })
+    if (choca(tarifaId)) {
+      const aviso = enCurso
+        ? `${estacionId} tiene una reserva en línea de ${nombreReserva} en curso hasta las ${hora(reserva.finMs)}. ¿Iniciar la sesión de todos modos?`
+        : `Esta sesión terminaría después de las ${hora(reserva.iniMs)}, cuando empieza la reserva en línea de ${nombreReserva}. ¿Iniciar de todos modos?`
+      if (!window.confirm(aviso)) return
+    }
+    onConfirm({ cliente: form.get('cliente'), tarifaId })
   }
 
   return (
     <div className="admin-modal__backdrop" onClick={onClose}>
       <form className="admin-modal" onClick={(e) => e.stopPropagation()} onSubmit={onSubmit}>
         <h3>Iniciar sesión en {estacionId}</h3>
+        {reserva && (
+          <p className="admin-modal__aviso">
+            {enCurso
+              ? `Esta estación tiene una reserva en línea en curso: ${nombreReserva}, de ${hora(reserva.iniMs)} a ${hora(reserva.finMs)}.`
+              : `Reserva en línea de ${nombreReserva} a las ${hora(reserva.iniMs)} (en ${minutosLibres} min). Hasta entonces la estación está libre ${minutosLibres} min.`}
+          </p>
+        )}
         <label>
           Cliente
           <input name="cliente" required placeholder="Nombre" />
         </label>
         <label>
           Tarifa
-          <select name="tarifa" defaultValue="hora">
+          <select name="tarifa" value={tarifaId} onChange={(e) => setTarifaId(e.target.value)}>
             {TARIFAS.map((t) => (
-              <option key={t.id} value={t.id}>{t.nombre} — ${t.precio}</option>
+              <option key={t.id} value={t.id}>{t.nombre} — ${t.precio}{choca(t.id) ? ' · se empalma con la reserva' : ''}</option>
             ))}
           </select>
         </label>

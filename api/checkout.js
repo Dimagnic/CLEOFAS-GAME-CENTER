@@ -1,6 +1,6 @@
 import {
-  CFG, db, stripe, json, sitioURL, nuevoFolio, ocupadasDelDia, limpiarVencidas,
-  precioPorHoras, validarReserva, inicioMX,
+  CFG, db, stripe, json, sitioURL, nuevoFolio, bloquesDelDia, limpiarVencidas,
+  precioPorHoras, validarReserva, inicioMX, chocaConBloques, hhmm,
 } from './_lib/comun.js'
 
 // POST /api/checkout  →  crea la reservación (apartada 31 min) y la sesión de pago de Stripe.
@@ -8,22 +8,25 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Método no permitido' })
 
   const b = req.body || {}
-  const problema = validarReserva(b)
-  if (problema) return json(res, 400, { error: problema })
-
-  const hora = Number(b.hora)
-  const dur = Number(b.duracion)
-  const inicio = inicioMX(b.fecha, hora)
-  const fin = new Date(inicio.getTime() + dur * 3600000)
-  const monto = precioPorHoras(dur) // el precio lo calcula el servidor, nunca el navegador
-  const expiraEn = new Date(Date.now() + CFG.HOLD_MIN * 60000)
 
   try {
+    const ahora = Date.now()
+    const problema = validarReserva(b, ahora)
+    if (problema) return json(res, 400, { error: problema })
+
+    const ini = Number(b.inicioMin) // minutos desde medianoche (ej. 730 = 12:10)
+    const dur = Number(b.duracion)
+    const inicio = inicioMX(b.fecha, ini)
+    const fin = new Date(inicio.getTime() + dur * 3600000)
+    const monto = precioPorHoras(dur) // el precio lo calcula el servidor, nunca el navegador
+    const expiraEn = new Date(ahora + CFG.HOLD_MIN * 60000)
+
     await limpiarVencidas(b.estacion)
 
-    const ocupadas = await ocupadasDelDia(b.estacion, b.fecha)
-    for (let h = hora; h < hora + dur; h++) {
-      if (ocupadas.includes(h)) return json(res, 409, { error: 'Ese horario ya está ocupado. Elige otro.' })
+    // Reservas, sesión en curso en el panel y mantenimiento: nada se puede empalmar.
+    const bloques = await bloquesDelDia(b.estacion, b.fecha, ahora)
+    if (chocaConBloques(ini, dur * 60, bloques)) {
+      return json(res, 409, { error: 'Ese horario ya está ocupado. Elige otro.' })
     }
 
     // Insert con folio único. La restricción de la base de datos rechaza traslapes (23P01)
@@ -39,7 +42,7 @@ export default async function handler(req, res) {
           telefono: String(b.telefono ?? '').replace(/\D/g, '') || null,
           estacion: b.estacion,
           fecha: b.fecha,
-          hora: `${String(hora).padStart(2, '0')}:00`,
+          hora: hhmm(ini),
           duracion_h: dur,
           inicio: inicio.toISOString(),
           fin: fin.toISOString(),
@@ -66,10 +69,10 @@ export default async function handler(req, res) {
           quantity: 1,
           price_data: {
             currency: 'mxn',
-            unit_amount: monto * 100,
+            unit_amount: Math.round(monto * 100),
             product_data: {
               name: `Cleofas Game Center · ${b.estacion} · ${dur} h`,
-              description: `${b.fecha} de ${hora}:00 a ${hora + dur}:00 · Folio ${reserva.folio}`,
+              description: `${b.fecha} de ${hhmm(ini)} a ${hhmm(ini + dur * 60)} · Folio ${reserva.folio}`,
             },
           },
         }],

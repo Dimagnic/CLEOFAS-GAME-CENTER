@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useEstacionesPublicas } from '../lib/estacionesPublicas'
 import {
-  HORA_ABRE, HORA_CIERRA, MAX_HORAS, precioPorHoras, ahoraMX, sumarDias, api,
+  HORA_ABRE, HORA_CIERRA, MAX_HORAS, precioPorHoras, iniciosPosibles, hhmm, ahoraMX, sumarDias, api,
 } from '../lib/reservas'
 import './Booking.css'
 
@@ -56,14 +56,14 @@ export default function Booking() {
 }
 
 function FormReserva() {
-  const hoy = useMemo(() => ahoraMX(), [])
   const { estaciones } = useEstacionesPublicas()
   const libres = estaciones.filter((e) => e.estado !== 'mantenimiento')
+  const hoyLocal = useMemo(() => ahoraMX(), [])
   const [estacion, setEstacion] = useState('')
-  const [fecha, setFecha] = useState(hoy.fecha)
+  const [fecha, setFecha] = useState(hoyLocal.fecha)
   const [duracion, setDuracion] = useState(1)
-  const [inicio, setInicio] = useState(null)
-  const [ocupadas, setOcupadas] = useState([])
+  const [inicio, setInicio] = useState(null) // minutos desde medianoche (ej. 730 = 12:10)
+  const [disp, setDisp] = useState({ bloques: [], hoy: null })
   const [cargandoDisp, setCargandoDisp] = useState(false)
   const [errorDisp, setErrorDisp] = useState('')
   const [error, setError] = useState('')
@@ -74,30 +74,38 @@ function FormReserva() {
     setCargandoDisp(true)
     setErrorDisp('')
     return api(`/api/availability?estacion=${estacion}&fecha=${fecha}`)
-      .then((d) => setOcupadas(d.ocupadas))
+      .then((d) => setDisp({ bloques: d.bloques, hoy: d.hoy }))
       .catch(() => setErrorDisp('No pudimos consultar la disponibilidad. Intenta de nuevo en un momento.'))
       .finally(() => setCargandoDisp(false))
   }
 
   useEffect(() => {
     setInicio(null)
-    setOcupadas([])
+    setDisp({ bloques: [], hoy: null })
     cargarDisponibilidad()
   }, [estacion, fecha])
 
-  const horas = Array.from({ length: HORA_CIERRA - HORA_ABRE }, (_, i) => HORA_ABRE + i)
-  const noDisponible = (h) => ocupadas.includes(h) || (fecha === hoy.fecha && h <= hoy.hora)
-  const rangoLibre = (h, d) => {
-    for (let x = h; x < h + d; x++) if (x >= HORA_CIERRA || noDisponible(x)) return false
-    return true
-  }
-  const total = precioPorHoras(duracion)
-  const listo = estacion && inicio !== null && rangoLibre(inicio, duracion)
+  const hoy = disp.hoy ?? hoyLocal
+  const validos = useMemo(
+    () => iniciosPosibles({ bloques: disp.bloques, duracion, fecha, hoy }),
+    [disp, duracion, fecha, hoy.fecha, hoy.min],
+  )
 
-  function cambiarDuracion(d) {
-    setDuracion(d)
-    if (inicio !== null && !rangoLibre(inicio, d)) setInicio(null)
-  }
+  // Si cambia la duración y la hora elegida ya no cabe, se desmarca.
+  useEffect(() => {
+    if (inicio !== null && !validos.includes(inicio)) setInicio(null)
+  }, [validos])
+
+  // Horas en punto (apagadas si no están libres) + el minuto exacto en que se libera la estación.
+  const botones = useMemo(() => {
+    const mapa = new Map()
+    for (let h = HORA_ABRE; h < HORA_CIERRA; h++) mapa.set(h * 60, { min: h * 60, corte: false })
+    for (const m of validos) if (!mapa.has(m)) mapa.set(m, { min: m, corte: true })
+    return [...mapa.values()].sort((a, b) => a.min - b.min)
+  }, [validos])
+
+  const total = precioPorHoras(duracion)
+  const listo = estacion && inicio !== null && validos.includes(inicio)
 
   async function onSubmit(e) {
     e.preventDefault()
@@ -113,7 +121,7 @@ function FormReserva() {
           cliente: f.get('cliente'),
           email: f.get('email'),
           telefono: f.get('telefono'),
-          estacion, fecha, hora: inicio, duracion,
+          estacion, fecha, inicioMin: inicio, duracion,
         }),
       })
       window.location.href = url // pago seguro en Stripe
@@ -155,7 +163,7 @@ function FormReserva() {
           Fecha
           <input
             type="date" required value={fecha}
-            min={hoy.fecha} max={sumarDias(hoy.fecha, 60)}
+            min={hoyLocal.fecha} max={sumarDias(hoyLocal.fecha, 60)}
             onChange={(e) => e.target.value && setFecha(e.target.value)}
           />
         </label>
@@ -163,7 +171,7 @@ function FormReserva() {
 
       <label>
         Duración
-        <select value={duracion} onChange={(e) => cambiarDuracion(Number(e.target.value))}>
+        <select value={duracion} onChange={(e) => setDuracion(Number(e.target.value))}>
           {Array.from({ length: MAX_HORAS }, (_, i) => i + 1).map((h) => (
             <option key={h} value={h}>{h} {h === 1 ? 'hora' : 'horas'} — ${precioPorHoras(h)} MXN</option>
           ))}
@@ -176,23 +184,27 @@ function FormReserva() {
           <p className="booking__hint">Elige una estación para ver los horarios libres.</p>
         ) : (
           <div className="booking__slots" aria-busy={cargandoDisp}>
-            {horas.map((h) => {
-              const bloqueada = cargandoDisp || noDisponible(h) || !rangoLibre(h, duracion)
-              return (
-                <button
-                  type="button" key={h} disabled={bloqueada}
-                  className={`slot ${inicio === h ? 'is-active' : ''}`}
-                  onClick={() => setInicio(h)}
-                >
-                  {h}:00
-                </button>
-              )
-            })}
+            {botones.map(({ min, corte }) => (
+              <button
+                type="button" key={min}
+                disabled={cargandoDisp || !validos.includes(min)}
+                title={corte ? 'La estación se libera justo a esta hora' : undefined}
+                className={`slot ${corte ? 'slot--corte' : ''} ${inicio === min ? 'is-active' : ''}`}
+                onClick={() => setInicio(min)}
+              >
+                {hhmm(min)}
+              </button>
+            ))}
           </div>
         )}
         {errorDisp && <p className="booking__error">{errorDisp}</p>}
-        {estacion && !cargandoDisp && !errorDisp && horas.every((h) => noDisponible(h) || !rangoLibre(h, duracion)) && (
-          <p className="booking__hint">No hay horarios de {duracion} h disponibles ese día. Prueba otra fecha o estación.</p>
+        {estacion && !cargandoDisp && !errorDisp && validos.length === 0 && (
+          <p className="booking__hint">No hay horarios de {duracion} h disponibles ese día. Prueba otra fecha, otra estación o menos horas.</p>
+        )}
+        {listo && (
+          <p className="booking__hint">
+            Tu horario: <strong>{hhmm(inicio)} a {hhmm(inicio + duracion * 60)}</strong> en {estacion}.
+          </p>
         )}
       </div>
 
@@ -203,7 +215,8 @@ function FormReserva() {
       </button>
       <p className="booking__hint">
         Pago seguro con Stripe. Tu horario se aparta 30 minutos mientras pagas.
-        Horario: todos los días de {HORA_ABRE}:00 a {HORA_CIERRA}:00.
+        Horario: todos los días de {HORA_ABRE}:00 a {HORA_CIERRA}:00. Si ves una hora como 12:10 con borde punteado,
+        es el momento exacto en que se libera esa estación.
       </p>
     </form>
   )

@@ -27,20 +27,38 @@ export function StationsProvider({ children }) {
     ESTACIONES.map((e) => ({ ...e, finMs: e.estado === 'sesion' ? Date.now() + e.restanteMin * 60000 : null }))
   )
   const [cierresHoy, setCierresHoy] = useState([])
+  const [reservas, setReservas] = useState([]) // reservas en línea de las próximas 24 h
   const [, setTick] = useState(0)
   const [errorSync, setErrorSync] = useState('')
 
   const cargar = useCallback(async () => {
     if (!enLinea) return
-    const [est, cie] = await Promise.all([
+    const ahora = Date.now()
+    const [est, cie, res] = await Promise.all([
       supabase.from('estaciones').select('*').order('id'),
       supabase.from('cierres').select('*').gte('created_at', inicioDeHoyMX()).order('created_at', { ascending: false }),
+      supabase.from('reservaciones')
+        .select('estacion, cliente, inicio, fin, estado, expires_at')
+        .in('estado', ['confirmada', 'pendiente_pago'])
+        .not('inicio', 'is', null)
+        .gte('fin', new Date(ahora).toISOString())
+        .lte('inicio', new Date(ahora + 24 * 3600000).toISOString())
+        .order('inicio'),
     ])
     if (est.error) { setErrorSync(est.error.message); return }
     setErrorSync('')
     setFilas(est.data.map(aFila))
     if (!cie.error) {
       setCierresHoy(cie.data.map((c) => ({ estacion: c.estacion, cliente: c.cliente, precio: Number(c.precio), hora: c.hora })))
+    }
+    if (!res.error) {
+      setReservas(res.data
+        // un pago pendiente que ya venció no bloquea nada
+        .filter((r) => r.estado !== 'pendiente_pago' || !r.expires_at || new Date(r.expires_at).getTime() > ahora)
+        .map((r) => ({
+          estacion: r.estacion, cliente: r.cliente, estado: r.estado,
+          iniMs: new Date(r.inicio).getTime(), finMs: new Date(r.fin).getTime(),
+        })))
     }
   }, [enLinea])
 
@@ -64,6 +82,12 @@ export function StationsProvider({ children }) {
     ...f,
     restanteMin: f.estado === 'sesion' && f.finMs ? minutosRestantes(f.finMs) : undefined,
   }))
+
+  // Reservas en línea de una estación que aún no terminan (la que está en curso o la próxima, en orden).
+  function reservasDe(estacionId) {
+    const ahora = Date.now()
+    return reservas.filter((r) => r.estacion === estacionId && r.finMs > ahora).sort((a, b) => a.iniMs - b.iniMs)
+  }
 
   async function guardar(id, cambios) {
     setFilas((prev) => prev.map((f) => (f.id === id ? { ...f, ...cambios.local } : f)))
@@ -121,7 +145,7 @@ export function StationsProvider({ children }) {
 
   return (
     <StationsContext.Provider
-      value={{ estaciones, cierresHoy, errorSync, iniciarSesion, finalizarSesion, marcarMantenimiento, liberar }}
+      value={{ estaciones, cierresHoy, errorSync, reservasDe, iniciarSesion, finalizarSesion, marcarMantenimiento, liberar }}
     >
       {children}
     </StationsContext.Provider>

@@ -113,3 +113,13 @@ Las funciones `/api` no corren con `npm run dev`. Para probar en local usa `npx 
 - Horario, estaciones, máximo de horas y tarifas: `api/_lib/reglas.js` (y lo mismo en `src/lib/reservas.js`).
 - Reembolsos: se hacen desde el panel de Stripe. Cancelar en `/panel/reservaciones` solo libera el horario.
 - `vercel.json` hace que `/panel` funcione al recargar la página.
+
+## Reservas sin minutos perdidos
+
+La página ofrece, además de las horas en punto, el **minuto exacto** en que se libera cada estación
+(por ejemplo 12:10 cuando hay una sesión en curso que termina a esa hora, redondeado a 5 minutos).
+- La sesión que el encargado tiene en curso en el panel cuenta como ocupada para las reservas en línea.
+- Al iniciar una sesión sobre una estación con reserva en línea, el panel avisa cuántos minutos hay libres
+  y pide confirmación si la sesión se empalmaría.
+- `MARGEN_MIN` (en `api/_lib/reglas.js` y `src/lib/reservas.js`) agrega un descanso entre clientes. Hoy es 0.
+- No requiere cambios en la base de datos.

@@ -197,3 +197,6 @@
   .admin-cards { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* --- Reservas en línea dentro del control de estaciones --- */
+.admin-station__reserva { margin: 8px 0 0; font-size: 0.75rem; color: var(--color-accent); }
+.admin-modal__aviso { margin: 0 0 12px; padding: 10px 12px; font-size: 0.82rem; color: var(--color-warn); background: rgba(255, 178, 56, 0.1); border: 1px solid rgba(255, 178, 56, 0.35); border-radius: var(--radius-sharp); }
