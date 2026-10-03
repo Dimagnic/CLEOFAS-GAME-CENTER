@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useEstacionesPublicas } from '../lib/estacionesPublicas'
 import {
-  HORA_ABRE, HORA_CIERRA, MAX_HORAS, precioPorHoras, iniciosPosibles, hhmm, ahoraMX, sumarDias, api,
+  MAX_HORAS, precioPorHoras, iniciosPosibles, hhmm, ahoraMX, sumarDias, api,
 } from '../lib/reservas'
+import { NEGOCIO, horarioDe } from '../data/negocio'
 import './Booking.css'
 
 export default function Booking() {
@@ -99,10 +100,11 @@ function FormReserva() {
   // Horas en punto (apagadas si no están libres) + el minuto exacto en que se libera la estación.
   const botones = useMemo(() => {
     const mapa = new Map()
-    for (let h = HORA_ABRE; h < HORA_CIERRA; h++) mapa.set(h * 60, { min: h * 60, corte: false })
+    const { abre, cierra } = horarioDe(fecha)
+    for (let m = abre; m + 60 <= cierra; m += 60) mapa.set(m, { min: m, corte: false })
     for (const m of validos) if (!mapa.has(m)) mapa.set(m, { min: m, corte: true })
     return [...mapa.values()].sort((a, b) => a.min - b.min)
-  }, [validos])
+  }, [validos, fecha])
 
   const total = precioPorHoras(duracion)
   const listo = estacion && inicio !== null && validos.includes(inicio)
@@ -155,7 +157,7 @@ function FormReserva() {
           <select value={estacion} onChange={(e) => setEstacion(e.target.value)} required>
             <option value="" disabled>Elige una</option>
             {libres.map((e) => (
-              <option key={e.id} value={e.id}>{e.id} — {e.tipo}</option>
+              <option key={e.id} value={e.id}>{e.id} — {e.tipo}{e.specs ? ` · ${e.specs}` : ''}</option>
             ))}
           </select>
         </label>
@@ -215,7 +217,7 @@ function FormReserva() {
       </button>
       <p className="booking__hint">
         Pago seguro con Stripe. Tu horario se aparta 30 minutos mientras pagas.
-        Horario: todos los días de {String(HORA_ABRE).padStart(2, '0')}:00 a {HORA_CIERRA}:00. Si ves una hora como 12:10 con borde punteado,
+        Horario: {NEGOCIO.horarioLineas.join(' · ')}. Si ves una hora con borde punteado (por ejemplo 12:10),
         es el momento exacto en que se libera esa estación.
       </p>
     </form>

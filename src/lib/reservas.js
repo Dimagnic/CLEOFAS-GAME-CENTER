@@ -1,7 +1,7 @@
 // Lo que el cliente ve en pantalla. El servidor (api/_lib/reglas.js) valida y recalcula todo;
 // estas constantes deben coincidir con las de allá.
-export const HORA_ABRE = 9
-export const HORA_CIERRA = 22
+import { horarioDe } from '../data/negocio'
+
 export const MAX_HORAS = 5
 export const PASO_MIN = 5
 export const MARGEN_MIN = 0 // descanso entre un cliente y el siguiente (0 = sin margen)
@@ -50,16 +50,17 @@ export function chocaConBloques(ini, durMin, bloques) {
 }
 
 // Horas de inicio (en minutos del día) que se pueden reservar para una duración:
-// las horas en punto libres, y además el minuto exacto en que se libera la estación (ej. 12:10).
+// una por hora a partir de la apertura de ese día (9:30, 10:30…), y además el minuto exacto en que se libera la estación (ej. 12:10).
 export function iniciosPosibles({ bloques, duracion, fecha, hoy }) {
   const durMin = duracion * 60
+  const { abre, cierra } = horarioDe(fecha)
   const candidatos = new Set()
-  for (let h = HORA_ABRE; h < HORA_CIERRA; h++) candidatos.add(h * 60)
+  for (let m = abre; m + 60 <= cierra; m += 60) candidatos.add(m)
   for (const b of bloques) candidatos.add(Math.ceil((b.fin + MARGEN_MIN) / PASO_MIN) * PASO_MIN)
   return [...candidatos]
     .filter((m) =>
-      m >= HORA_ABRE * 60 &&
-      m + durMin <= HORA_CIERRA * 60 &&
+      m >= abre &&
+      m + durMin <= cierra &&
       !(fecha === hoy.fecha && m <= hoy.min) &&
       !chocaConBloques(m, durMin, bloques))
     .sort((a, b) => a - b)

@@ -10,7 +10,10 @@ export default function Contact() {
           <h2 className="contact__title">Encuéntranos</h2>
           <ul className="contact__list">
             <li><strong>Dirección</strong>{NEGOCIO.direccion}</li>
-            <li><strong>Horario</strong>{NEGOCIO.horario}</li>
+            <li>
+              <strong>Horario</strong>
+              {NEGOCIO.horarioLineas.map((l) => <span key={l} className="contact__linea">{l}</span>)}
+            </li>
             <li><strong>Teléfono y WhatsApp</strong><a href={`tel:${NEGOCIO.telefonoLink}`}>{NEGOCIO.telefono}</a></li>
             <li>
               <strong>Síguenos</strong>

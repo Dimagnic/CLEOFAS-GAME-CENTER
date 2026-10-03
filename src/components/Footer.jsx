@@ -34,7 +34,7 @@ export default function Footer() {
           <h3>Contacto</h3>
           <ul>
             <li><a href={MAPA_LINK} target="_blank" rel="noopener noreferrer">{NEGOCIO.direccion}</a></li>
-            <li>{NEGOCIO.horario}</li>
+            {NEGOCIO.horarioLineas.map((l) => <li key={l}>{l}</li>)}
             <li><a href={`tel:${NEGOCIO.telefonoLink}`}>Tel: {NEGOCIO.telefono}</a></li>
             <li><a href={whatsappUrl()} target="_blank" rel="noopener noreferrer">WhatsApp: {NEGOCIO.telefono}</a></li>
             <li className="footer__redes">

@@ -6,14 +6,34 @@ export const NEGOCIO = {
   telefonoLink: '+525646253958',  // para tel:
   whatsapp: '525646253958',       // para wa.me (código de país + número, sin + ni espacios)
   direccion: 'Av 2 Ote 811, Centro histórico de Puebla, 72000 Heroica Puebla de Zaragoza, Pue., México',
-  horario: 'Todos los días, 09:00 a 22:00',
-  horarioCorto: '09:00–22:00',
+  horarioLineas: ['Domingo a jueves: 9:30 a.m. – 7 p.m.', 'Viernes y sábado: 9:30 a.m. – 8:30 p.m.'],
   redes: {
     tiktok: 'https://www.tiktok.com/@cleofascte',
     instagram: 'https://www.instagram.com/cleofasgame',
     facebook: 'https://www.facebook.com/cleofasgamezone',
   },
   desarrolladoPor: { nombre: 'Cero+', url: 'https://codefy-b3kf.vercel.app/' },
+}
+
+// Horario por día de la semana (0 = domingo … 6 = sábado), en minutos desde medianoche: [abre, cierra].
+// Debe coincidir con api/_lib/reglas.js (ahí se valida cada reserva).
+const SEMANA = {
+  0: [570, 1140], 1: [570, 1140], 2: [570, 1140], 3: [570, 1140], 4: [570, 1140], // 9:30 – 19:00
+  5: [570, 1230], 6: [570, 1230],                                                  // 9:30 – 20:30
+}
+export function horarioDe(fechaISO) {
+  const [abre, cierra] = SEMANA[new Date(`${fechaISO}T12:00:00Z`).getUTCDay()]
+  return { abre, cierra }
+}
+// 570 → "9:30 a.m.", 1140 → "7 p.m."
+export function formato12(min) {
+  const h = Math.floor(min / 60), m = min % 60
+  return `${h % 12 || 12}${m ? ':' + String(m).padStart(2, '0') : ''} ${h < 12 ? 'a.m.' : 'p.m.'}`
+}
+export function horarioHoyTexto() {
+  const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Mexico_City' }).format(new Date())
+  const { abre, cierra } = horarioDe(hoy)
+  return `${formato12(abre)} – ${formato12(cierra)}`
 }
 
 // Mapa de Google (sin llave de API) y enlace para abrir la ruta en la app de mapas.

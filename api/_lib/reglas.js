@@ -3,9 +3,7 @@
 // (lo que ve el cliente en pantalla). El servidor es quien manda: recalcula el precio y el horario.
 
 export const CFG = {
-  ESTACIONES: ['PC-01', 'PC-02', 'PC-03', 'PC-04', 'PC-05', 'PC-06', 'PC-07', 'PC-08', 'PS-01', 'PS-02'],
-  HORA_ABRE: 9,            // 09:00
-  HORA_CIERRA: 22,         // 22:00
+  ESTACIONES: ['PC-01', 'PC-02', 'PC-03', 'PC-04', 'PC-05', 'XB-01', 'XB-02', 'XB-03', 'XB-04', 'XB-05', 'XB-06'],
   MAX_HORAS: 5,
   HOLD_MIN: 31,            // minutos que se aparta el horario mientras el cliente paga
   DIAS_ADELANTE: 60,
@@ -13,6 +11,21 @@ export const CFG = {
   PASO_MIN: 5,             // los horarios se ofrecen en múltiplos de 5 minutos
   MARGEN_MIN: 0,           // descanso entre un cliente y el siguiente (0 = sin margen; 5 = cinco minutos)
   SESION_VENCIDA_MIN: 10,  // si una sesión del piso ya pasó su hora y nadie la cierra, se asume que sigue 10 min más
+}
+
+// Horario por día de la semana (0 = domingo … 6 = sábado), en minutos desde medianoche: [abre, cierra].
+// Debe coincidir con src/data/negocio.js.
+const SEMANA = {
+  0: [570, 1140], 1: [570, 1140], 2: [570, 1140], 3: [570, 1140], 4: [570, 1140], // 9:30 – 19:00
+  5: [570, 1230], 6: [570, 1230],                                                  // 9:30 – 20:30
+}
+export function horarioDe(fecha) {
+  const [abre, cierra] = SEMANA[new Date(`${fecha}T12:00:00Z`).getUTCDay()]
+  return { abre, cierra }
+}
+export function formato12(min) {
+  const h = Math.floor(min / 60), m = min % 60
+  return `${h % 12 || 12}${m ? ':' + String(m).padStart(2, '0') : ''} ${h < 12 ? 'a.m.' : 'p.m.'}`
 }
 
 // Tarifas: 1 h = $35, paquete 3 h = $90, paquete 5 h = $140. Se toma la combinación más barata.
@@ -67,8 +80,9 @@ export function validarReserva(b, ahora = Date.now()) {
   const ini = Number(b.inicioMin)
   const dur = Number(b.duracion)
   if (!Number.isInteger(dur) || dur < 1 || dur > CFG.MAX_HORAS) return `Puedes reservar de 1 a ${CFG.MAX_HORAS} horas.`
-  if (!Number.isInteger(ini) || ini % CFG.PASO_MIN !== 0 || ini < CFG.HORA_ABRE * 60 || ini + dur * 60 > CFG.HORA_CIERRA * 60) {
-    return `Nuestro horario es de ${String(CFG.HORA_ABRE).padStart(2, '0')}:00 a ${CFG.HORA_CIERRA}:00.`
+  const { abre, cierra } = horarioDe(b.fecha)
+  if (!Number.isInteger(ini) || ini % CFG.PASO_MIN !== 0 || ini < abre || ini + dur * 60 > cierra) {
+    return `Ese día nuestro horario es de ${formato12(abre)} a ${formato12(cierra)}`
   }
   const inicio = inicioMX(b.fecha, ini)
   if (inicio.getTime() <= ahora) return 'Ese horario ya pasó. Elige otro.'
