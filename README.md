@@ -123,3 +123,17 @@ La página ofrece, además de las horas en punto, el **minuto exacto** en que se
   y pide confirmación si la sesión se empalmaría.
 - `MARGEN_MIN` (en `api/_lib/reglas.js` y `src/lib/reservas.js`) agrega un descanso entre clientes. Hoy es 0.
 - No requiere cambios en la base de datos.
+
+## Correo de confirmación
+
+Al confirmarse el pago, el cliente recibe un correo con su folio, equipo, fecha, horario, total y cómo llegar.
+Se envía una sola vez por reservación (cuando pasa de "esperando pago" a "pagada"), desde el webhook de Stripe o,
+si éste tarda, desde la pantalla de confirmación. Si el correo falla, el pago y la reservación no se afectan.
+
+Variables en Vercel:
+- `RESEND_API_KEY` (de resend.com → API Keys). Sin ella no se envía nada.
+- `EMAIL_FROM`, por ejemplo `Cleofas Game Center <reservas@tudominio.mx>`. Requiere un **dominio verificado** en Resend
+  (Domains → Add Domain y agregar los registros DNS que indica). Sin dominio, Resend solo permite enviar pruebas a tu propio correo.
+- `EMAIL_COPIA` (opcional): correo del negocio que recibe copia de cada reservación pagada.
+
+El diseño del correo está en `api/_lib/plantillaCorreo.js`; la dirección, el teléfono y las redes salen de `src/data/negocio.js`.

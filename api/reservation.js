@@ -1,4 +1,5 @@
-import { db, stripe, json } from './_lib/comun.js'
+import { db, stripe, json, sitioURL } from './_lib/comun.js'
+import { enviarConfirmacionSegura } from './_lib/correo.js'
 
 const CAMPOS = 'id, folio, cliente, estacion, fecha, hora, duracion_h, estado, monto, stripe_session_id, expires_at'
 
@@ -43,12 +44,14 @@ export default async function handler(req, res) {
         // Respaldo por si el webhook tarda: preguntamos a Stripe directamente.
         const s = await stripe().checkout.sessions.retrieve(r.stripe_session_id)
         if (s.payment_status === 'paid') {
-          await db()
+          const { data: actualizadas } = await db()
             .from('reservaciones')
             .update({ estado: 'confirmada', paid_at: new Date().toISOString(), stripe_payment_intent_id: s.payment_intent })
             .eq('id', r.id)
             .eq('estado', 'pendiente_pago')
+            .select('id')
           r.estado = 'confirmada'
+          if (actualizadas?.length) await enviarConfirmacionSegura(r.id, sitioURL(req)) // si el webhook no llegó primero
         }
       }
     }

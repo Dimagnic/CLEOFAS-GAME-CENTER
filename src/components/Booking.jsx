@@ -298,6 +298,7 @@ function Retorno({ retorno, onCerrar }) {
         <div><dt>Pagado</dt><dd>${res.monto} MXN</dd></div>
       </dl>
       <p>Guarda tu folio y muéstralo al llegar. ¡Te esperamos con tu estación lista!</p>
+      <p className="booking__hint">También te enviamos la confirmación por correo. Si no la ves en unos minutos, revisa la carpeta de spam o escríbenos por WhatsApp.</p>
       <button className="btn btn-ghost" onClick={onCerrar}>Hacer otra reservación</button>
     </div>
   )

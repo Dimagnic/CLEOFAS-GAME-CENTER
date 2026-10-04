@@ -1,4 +1,5 @@
-import { db, stripe } from './_lib/comun.js'
+import { db, stripe, sitioURL } from './_lib/comun.js'
+import { enviarConfirmacionSegura } from './_lib/correo.js'
 
 // Stripe firma el cuerpo EXACTO de la petición, así que lo leemos sin parsear.
 export const config = { api: { bodyParser: false } }
@@ -41,6 +42,7 @@ export default async function handler(req, res) {
           .select('id')
         // Si no se actualizó nada, el pago llegó cuando el apartado ya se había liberado: reembolsar a mano.
         if (!data?.length) console.warn(`Pago recibido para reservación ${id} que ya no estaba pendiente; revisar en Stripe`)
+        else await enviarConfirmacionSegura(id, sitioURL(req)) // solo la primera vez que pasa a pagada
       } else if (event.type === 'checkout.session.expired' || event.type === 'checkout.session.async_payment_failed') {
         await db().from('reservaciones').update({ estado: 'expirada' }).eq('id', id).eq('estado', 'pendiente_pago')
       }
