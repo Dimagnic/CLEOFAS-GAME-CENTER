@@ -48,6 +48,10 @@ export default function Footer() {
 
       <div className="wrap footer__bottom">
         <p>© {new Date().getFullYear()} Cleofas Game Center. Todos los derechos reservados.</p>
+        <div className="footer__legal">
+          <Link to="/privacidad">Aviso de privacidad</Link>
+          <Link to="/politica-de-cancelacion">Cancelaciones y reembolsos</Link>
+        </div>
         <Link to="/panel" className="footer__admin">Panel del negocio</Link>
         <div className="footer__dev">
           <span>Desarrollado por</span>

@@ -15,6 +15,17 @@ export const NEGOCIO = {
   desarrolladoPor: { nombre: 'Cero+', url: 'https://codefy-b3kf.vercel.app/' },
 }
 
+// Datos para el Aviso de privacidad y la Política de cancelación (páginas /privacidad y /politica-de-cancelacion).
+// PENDIENTE: completa lo que esté vacío con los datos reales del titular y revisa los textos con un abogado.
+export const LEGAL = {
+  responsable: '',          // nombre completo o razón social de quien es responsable de los datos
+  correoPrivacidad: '',     // correo para ejercer derechos ARCO (acceso, rectificación, cancelación, oposición)
+  actualizado: '4 de octubre de 2026',
+  version: '2026-10-04',    // se guarda junto al pago para saber qué versión aceptó el cliente
+  revisadoPorAbogado: false, // al terminar la revisión legal, cámbialo a true y desaparece el aviso de "borrador"
+  horasSinCostoCancelacion: 24, // con al menos estas horas de anticipación, cancelación sin costo
+}
+
 // Horario por día de la semana (0 = domingo … 6 = sábado), en minutos desde medianoche: [abre, cierra].
 // Debe coincidir con api/_lib/reglas.js (ahí se valida cada reserva).
 const SEMANA = {

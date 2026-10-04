@@ -85,6 +85,8 @@ export function armarCorreo(r, est, sitio) {
       <a href="${esc(NEGOCIO.redes.instagram)}" style="color:#8a8fa3;">Instagram</a> ·
       <a href="${esc(NEGOCIO.redes.tiktok)}" style="color:#8a8fa3;">TikTok</a> ·
       <a href="${esc(NEGOCIO.redes.facebook)}" style="color:#8a8fa3;">Facebook</a><br>
+      <a href="${esc(sitio)}/privacidad" style="color:#8a8fa3;">Aviso de privacidad</a> ·
+      <a href="${esc(sitio)}/politica-de-cancelacion" style="color:#8a8fa3;">Política de cancelación y reembolso</a><br>
       Este correo confirma tu reservación en ${esc(NEGOCIO.nombre)}.
     </div>
   </td></tr>
@@ -103,6 +105,7 @@ export function armarCorreo(r, est, sitio) {
     '',
     'Llega unos minutos antes y muestra tu folio.',
     `¿Cambios o cancelaciones? WhatsApp ${NEGOCIO.telefono}: ${wa}`,
+    `Política de cancelación y reembolso: ${sitio}/politica-de-cancelacion`,
   ].join('\n')
 
   return { asunto: `Reservación confirmada · Folio ${r.folio}`, html, texto }

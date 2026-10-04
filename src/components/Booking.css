@@ -117,3 +117,7 @@
 
 /* Hora exacta en que se libera una estación (ej. 12:10) */
 .slot--corte { border-style: dashed; border-color: var(--color-accent); }
+
+.booking__check { display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.85rem; line-height: 1.45; color: var(--color-ink-muted); cursor: pointer; }
+.booking__check input { margin-top: 0.2rem; accent-color: var(--color-accent); width: 1.05rem; height: 1.05rem; flex: none; }
+.booking__check a, .booking__hint a { color: var(--color-accent); text-decoration: underline; text-underline-offset: 2px; }

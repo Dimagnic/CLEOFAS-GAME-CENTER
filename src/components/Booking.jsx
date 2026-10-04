@@ -69,6 +69,7 @@ function FormReserva() {
   const [errorDisp, setErrorDisp] = useState('')
   const [error, setError] = useState('')
   const [pagando, setPagando] = useState(false)
+  const [acepta, setAcepta] = useState(false)
 
   function cargarDisponibilidad() {
     if (!estacion || !fecha) return Promise.resolve()
@@ -111,7 +112,7 @@ function FormReserva() {
 
   async function onSubmit(e) {
     e.preventDefault()
-    if (!listo) return
+    if (!listo || !acepta) return
     setError('')
     setPagando(true)
     const f = new FormData(e.target)
@@ -123,7 +124,7 @@ function FormReserva() {
           cliente: f.get('cliente'),
           email: f.get('email'),
           telefono: f.get('telefono'),
-          estacion, fecha, inicioMin: inicio, duracion,
+          estacion, fecha, inicioMin: inicio, duracion, aceptaPoliticas: acepta,
         }),
       })
       window.location.href = url // pago seguro en Stripe
@@ -150,6 +151,10 @@ function FormReserva() {
           <input type="tel" name="telefono" placeholder="56 4625 3958" />
         </label>
       </div>
+      <p className="booking__hint">
+        Usaremos tu nombre, correo y teléfono solo para gestionar tu reservación y enviarte la confirmación.
+        Consulta el <a href="/privacidad" target="_blank" rel="noopener noreferrer">Aviso de privacidad</a>.
+      </p>
 
       <div className="booking__row">
         <label>
@@ -212,8 +217,16 @@ function FormReserva() {
 
       {error && <p className="booking__error" role="alert">{error}</p>}
 
-      <button type="submit" className="btn btn-primary" disabled={!listo || pagando}>
-        {pagando ? 'Redirigiendo al pago…' : listo ? `Pagar $${total} MXN y reservar` : 'Elige estación y hora'}
+      <label className="booking__check">
+        <input type="checkbox" checked={acepta} onChange={(e) => setAcepta(e.target.checked)} />
+        <span>
+          He leído y acepto el <a href="/privacidad" target="_blank" rel="noopener noreferrer">Aviso de privacidad</a> y la{' '}
+          <a href="/politica-de-cancelacion" target="_blank" rel="noopener noreferrer">Política de cancelación y reembolso</a>.
+        </span>
+      </label>
+
+      <button type="submit" className="btn btn-primary" disabled={!listo || !acepta || pagando}>
+        {pagando ? 'Redirigiendo al pago…' : !listo ? 'Elige estación y hora' : !acepta ? 'Acepta las políticas para continuar' : `Pagar $${total} MXN y reservar`}
       </button>
       <p className="booking__hint">
         Pago seguro con Stripe. Tu horario se aparta 30 minutos mientras pagas.

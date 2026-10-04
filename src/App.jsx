@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
+import { Privacidad, Cancelacion } from './pages/Legal'
 import Login from './pages/admin/Login'
 import AdminLayout from './pages/admin/AdminLayout'
 import Dashboard from './pages/admin/Dashboard'
@@ -16,6 +17,8 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/privacidad" element={<Privacidad />} />
+            <Route path="/politica-de-cancelacion" element={<Cancelacion />} />
             <Route path="/panel/login" element={<Login />} />
             <Route path="/panel" element={<AdminLayout />}>
               <Route index element={<Dashboard />} />

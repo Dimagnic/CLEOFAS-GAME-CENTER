@@ -2,6 +2,7 @@ import {
   CFG, db, stripe, json, sitioURL, nuevoFolio, bloquesDelDia, limpiarVencidas,
   precioPorHoras, validarReserva, inicioMX, chocaConBloques, hhmm,
 } from './_lib/comun.js'
+import { LEGAL } from '../src/data/negocio.js'
 
 // POST /api/checkout  →  crea la reservación (apartada 31 min) y la sesión de pago de Stripe.
 export default async function handler(req, res) {
@@ -13,6 +14,9 @@ export default async function handler(req, res) {
     const ahora = Date.now()
     const problema = validarReserva(b, ahora)
     if (problema) return json(res, 400, { error: problema })
+    if (b.aceptaPoliticas !== true) {
+      return json(res, 400, { error: 'Debes aceptar el Aviso de privacidad y la Política de cancelación para continuar.' })
+    }
 
     const ini = Number(b.inicioMin) // minutos desde medianoche (ej. 730 = 12:10)
     const dur = Number(b.duracion)
@@ -78,7 +82,8 @@ export default async function handler(req, res) {
         }],
         payment_intent_data: { description: `Reservación ${reserva.folio}` },
         expires_at: Math.floor(expiraEn.getTime() / 1000),
-        metadata: { reservacion_id: reserva.id, folio: reserva.folio },
+        // Queda registrado en Stripe qué versión de las políticas aceptó el cliente.
+        metadata: { reservacion_id: reserva.id, folio: reserva.folio, politicas_version: LEGAL.version },
         success_url: `${sitio}/?pago=ok&folio=${reserva.folio}#reservar`,
         cancel_url: `${sitio}/?pago=cancelado&folio=${reserva.folio}#reservar`,
       })

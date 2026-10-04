@@ -68,3 +68,6 @@
 .footer__cero { display: inline-flex; transition: transform 0.2s ease, opacity 0.2s ease; opacity: 0.92; }
 .footer__cero:hover,
 .footer__cero:focus-visible { transform: scale(1.06); opacity: 1; }
+
+.footer__legal { display: flex; gap: 1.2rem; flex-wrap: wrap; }
+.footer__legal a { text-decoration: underline; text-underline-offset: 3px; }
