@@ -5,6 +5,7 @@ import Pricing from '../components/Pricing'
 import Services from '../components/Services'
 import Booking from '../components/Booking'
 import Contact from '../components/Contact'
+import Ticker from '../components/Ticker'
 import Footer from '../components/Footer'
 import FloatingSocial from '../components/FloatingSocial'
 
@@ -14,7 +15,7 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
-        <div className="circuit-divider" />
+        <Ticker />
         <StationsBoard />
         <Pricing />
         <Services />

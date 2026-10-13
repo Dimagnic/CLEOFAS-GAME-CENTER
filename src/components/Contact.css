@@ -50,6 +50,6 @@
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.contact__ruta:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(76, 111, 255, 0.55); }
+.contact__ruta:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(225, 11, 11, 0.55); }
 
 .contact__linea { display: block; }

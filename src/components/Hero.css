@@ -1,7 +1,7 @@
 .hero {
   padding: var(--space-6) 0 var(--space-5);
   background:
-    radial-gradient(680px 420px at 82% -10%, rgba(76, 111, 255, 0.16), transparent 60%),
+    radial-gradient(680px 420px at 82% -10%, rgba(225, 11, 11, 0.22), transparent 60%),
     var(--color-bg);
 }
 

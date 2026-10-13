@@ -11,13 +11,14 @@ export default function Hero() {
 
   return (
     <section className="hero">
+      <div className="hero__orbe" aria-hidden="true" />
       <div className="wrap hero__grid">
         <div className="hero__copy">
           <p className="eyebrow">Puebla · Hoy abierto {horarioHoyTexto()}</p>
           <h1 className="hero__title">
             Tu estación te espera,
             <br />
-            no la busques a ciegas.
+            <span className="hl">no la busques a ciegas.</span>
           </h1>
           <p className="hero__lead">
             5 PC gaming con RTX y 6 consolas Xbox para jugar en línea con tus

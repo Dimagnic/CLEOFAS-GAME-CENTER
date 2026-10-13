@@ -9,6 +9,7 @@ import Reservations from './pages/admin/Reservations'
 import Cashbox from './pages/admin/Cashbox'
 import { AuthProvider } from './lib/AuthContext'
 import { StationsProvider } from './lib/StationsStore'
+import './styles/futuro.css'
 
 export default function App() {
   return (

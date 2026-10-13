@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import './Navbar.css'
 
 const LINKS = [
@@ -35,9 +35,6 @@ export default function Navbar() {
               {l.label}
             </a>
           ))}
-          <NavLink to="/panel" className="nav__admin-link" onClick={() => setOpen(false)}>
-            Panel del negocio
-          </NavLink>
         </nav>
 
         <button
