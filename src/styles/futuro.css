@@ -188,3 +188,93 @@ html, body { overflow-x: clip; }
   .lugar__video { max-width: 340px; margin: 0 auto; }
 }
 @media (prefers-reduced-motion: reduce) { .lugar__rec i { animation: none; } }
+
+/* ===== Efectos dinámicos (los activa Efectos.jsx) ===== */
+.fx-progreso {
+  position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 100; transform-origin: 0 50%; transform: scaleX(0);
+  background: linear-gradient(90deg, var(--color-accent), var(--color-accent-bright), var(--color-cyan));
+  box-shadow: 0 0 12px var(--color-accent-bright);
+}
+/* aparición al hacer scroll */
+.js-fx [data-fx] { opacity: 0; transform: translateY(34px); filter: blur(6px);
+  transition: opacity .8s var(--ease) var(--d, 0ms), transform .8s var(--ease) var(--d, 0ms), filter .8s var(--ease) var(--d, 0ms); }
+.js-fx [data-fx][data-in] { opacity: 1; transform: none; filter: none; }
+.js-fx .lugar__video[data-fx] { transform: translateX(-40px) scale(.96); }
+.js-fx .lugar__video[data-fx][data-in] { transform: none; }
+/* encabezados: el trazo rojo se dibuja */
+.js-fx [data-fx] + .x, .stations__title::after, .pricing__title::after, .services__title::after, .booking__title::after, .contact__title::after { transform-origin: left; }
+.js-fx .stations__title[data-fx]:not([data-in])::after, .js-fx .pricing__title[data-fx]:not([data-in])::after,
+.js-fx .services__title[data-fx]:not([data-in])::after, .js-fx .booking__title[data-fx]:not([data-in])::after,
+.js-fx .contact__title[data-fx]:not([data-in])::after { width: 0; }
+.stations__title::after, .pricing__title::after, .services__title::after, .booking__title::after, .contact__title::after { transition: width 1s var(--ease) .3s; }
+
+/* tarjetas: brillo que sigue al cursor, inclinación 3D y barrido */
+.station-card, .price-card, .service-card { transform: perspective(800px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); will-change: transform; }
+.js-fx .station-card[data-fx][data-in], .js-fx .price-card[data-fx][data-in], .js-fx .service-card[data-fx][data-in] {
+  transform: perspective(800px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform .15s ease-out, border-color .25s, box-shadow .25s, opacity .8s var(--ease) var(--d, 0ms);
+}
+.station-card::after, .price-card::after, .service-card::after, .booking__card::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .25s;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 42, 42, .22), transparent 60%);
+}
+.station-card:hover::after, .price-card:hover::after, .service-card:hover::after, .booking__card:hover::after { opacity: 1; }
+.service-card:hover .service-card__ico { animation: flota 1.2s ease-in-out infinite; }
+@keyframes flota { 50% { transform: translateY(-6px) scale(1.08); } }
+
+/* estaciones libres respiran en verde */
+.station-card--libre .station-card__status { animation: respira 2.4s ease-in-out infinite; }
+@keyframes respira { 50% { text-shadow: 0 0 12px var(--color-ok); opacity: .75; } }
+.station-card--sesion .station-card__timer { animation: parpadeo 1.4s steps(2) infinite; }
+@keyframes parpadeo { 50% { opacity: .45; } }
+
+/* tarifa destacada: halo que late */
+.price-card--destacado { animation: latido 2.4s ease-in-out infinite; }
+.price-card__precio { transition: letter-spacing .3s; }
+.price-card:hover .price-card__precio { letter-spacing: .04em; }
+
+/* botones: barrido de luz */
+.btn { position: relative; overflow: hidden; }
+.btn::after { content: ""; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%; transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent); transition: left .6s var(--ease); }
+.btn:hover::after { left: 130%; }
+.btn-primary { animation: latido 2.8s ease-in-out infinite; }
+@keyframes latido { 50% { box-shadow: 0 0 34px rgba(255, 42, 42, .75); } }
+
+/* portada: titular con parpadeo glitch, aro con parallax, cuadros que se encienden */
+.hero__title .hl { animation: glitch 6s infinite; }
+@keyframes glitch {
+  0%, 92%, 100% { transform: none; text-shadow: 0 0 24px rgba(255, 42, 42, .55); }
+  93% { transform: translate(-3px, 1px); text-shadow: 3px 0 var(--color-cyan), -3px 0 #ff0; }
+  95% { transform: translate(3px, -1px); text-shadow: -3px 0 var(--color-cyan), 3px 0 #ff0; }
+  97% { transform: none; }
+}
+.hero__orbe { transform: translateY(calc(var(--sy, 0) * -0.15px)) rotate(calc(var(--sy, 0) * 0.08deg)); animation: none; }
+.hero__cell--libre { animation: enciende 3s ease-in-out infinite; }
+.hero__cell:nth-child(2n) { animation-delay: .4s; } .hero__cell:nth-child(3n) { animation-delay: .9s; }
+@keyframes enciende { 50% { box-shadow: inset 0 0 14px rgba(43, 224, 139, .45), 0 0 10px rgba(43, 224, 139, .25); } }
+.hero__specs li { transition: transform .25s var(--ease), border-color .25s; }
+.hero__specs li:hover { transform: translateX(6px); border-color: var(--color-cyan); }
+
+/* ticker: se frena al pasar el cursor */
+.ticker:hover .ticker__track { animation-play-state: paused; }
+
+/* horarios (reserva): pulso al elegir */
+.slot { transition: transform .15s, box-shadow .2s, border-color .2s; }
+.slot:not(:disabled):hover { transform: translateY(-2px); border-color: var(--color-accent-bright); box-shadow: 0 0 14px rgba(225, 11, 11, .4); }
+.slot.is-active { animation: latido 2s ease-in-out infinite; }
+
+/* contacto y pie */
+.contact__list li { transition: transform .25s var(--ease); }
+.contact__list li:hover { transform: translateX(8px); }
+.footer a { transition: color .2s, text-shadow .2s; }
+.footer a:hover { color: var(--color-accent-bright); text-shadow: 0 0 10px rgba(255, 42, 42, .6); }
+
+/* luz de neón que recorre el menú al hacer scroll */
+.nav--scrolled { animation: neonNav 6s ease-in-out infinite; }
+@keyframes neonNav { 50% { border-bottom-color: rgba(46, 196, 255, .55); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .js-fx [data-fx] { opacity: 1; transform: none; filter: none; }
+}
+@media (hover: none) { .station-card, .price-card, .service-card { transform: none !important; } }

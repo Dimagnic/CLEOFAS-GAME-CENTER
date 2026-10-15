@@ -7,6 +7,7 @@ import Booking from '../components/Booking'
 import Contact from '../components/Contact'
 import Ticker from '../components/Ticker'
 import Lugar from '../components/Lugar'
+import Efectos from '../components/Efectos'
 import Footer from '../components/Footer'
 import FloatingSocial from '../components/FloatingSocial'
 
@@ -26,6 +27,7 @@ export default function Home() {
       </main>
       <Footer />
       <FloatingSocial />
+      <Efectos />
     </>
   )
 }
