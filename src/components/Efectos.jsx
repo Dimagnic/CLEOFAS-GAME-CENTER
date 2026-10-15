@@ -24,6 +24,7 @@ export default function Efectos() {
         e.target.setAttribute('data-in', '1')
         io.unobserve(e.target)
         if (e.target.matches('.lugar__datos')) contar(e.target)
+        if (e.target.matches('.eyebrow')) descifrar(e.target)
       })
     }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' })
 
@@ -42,6 +43,19 @@ export default function Efectos() {
     // las tarjetas de estaciones llegan después de cargar datos
     const mo = new MutationObserver(marcar)
     mo.observe(document.body, { childList: true, subtree: true })
+
+    // texto que se "descifra" como terminal
+    function descifrar(el) {
+      const fin = el.textContent
+      const abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#/<>'
+      const t0 = performance.now()
+      const paso = (t) => {
+        const k = Math.min((t - t0) / 700, 1)
+        el.textContent = [...fin].map((ch, j) => (ch === ' ' || j < k * fin.length ? ch : abc[Math.floor(Math.random() * abc.length)])).join('')
+        if (k < 1) requestAnimationFrame(paso); else el.textContent = fin
+      }
+      requestAnimationFrame(paso)
+    }
 
     // 2) contador de números
     function contar(ul) {
@@ -79,6 +93,13 @@ export default function Efectos() {
     document.addEventListener('pointermove', mover, { passive: true })
     document.addEventListener('pointerout', salir, { passive: true })
 
+    // foco de luz que sigue al cursor por toda la página
+    const foco = document.createElement('div')
+    foco.className = 'fx-foco'
+    document.body.appendChild(foco)
+    const sigue = (ev) => { foco.style.transform = `translate(${ev.clientX - 200}px, ${ev.clientY - 200}px)` }
+    window.addEventListener('pointermove', sigue, { passive: true })
+
     // 4) barra de progreso y parallax del aro
     const barra = document.createElement('div')
     barra.className = 'fx-progreso'
@@ -97,6 +118,8 @@ export default function Efectos() {
       document.removeEventListener('pointerout', salir)
       window.removeEventListener('scroll', scroll)
       barra.remove()
+      foco.remove()
+      window.removeEventListener('pointermove', sigue)
       raiz.classList.remove('js-fx')
     }
   }, [])

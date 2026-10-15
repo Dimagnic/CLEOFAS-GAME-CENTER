@@ -1,13 +1,18 @@
+import { useState } from 'react'
 import { horarioHoyTexto } from '../data/negocio'
+import { VIDEOS } from '../data/videos'
 
 export default function Lugar() {
+  const [i, setI] = useState(0)
+  const v = VIDEOS[i]
   return (
     <section className="section lugar">
       <div className="wrap lugar__grid">
         <div className="lugar__video hud-video">
           <video
-            src="/video/cleofas-home.mp4"
-            poster="/video/cleofas-home.jpg"
+            key={v.src}
+            src={v.src}
+            poster={v.poster}
             autoPlay
             muted
             loop
@@ -15,7 +20,14 @@ export default function Lugar() {
             preload="metadata"
             aria-label="Así se vive Cleofas Game Center"
           />
-          <span className="lugar__rec"><i />CLEOFAS · PUEBLA</span>
+          <span className="lugar__rec"><i />CLEOFAS · {v.titulo.toUpperCase()}</span>
+          {VIDEOS.length > 1 && (
+            <div className="lugar__tabs">
+              {VIDEOS.map((x, k) => (
+                <button key={x.src} className={k === i ? 'on' : ''} onClick={() => setI(k)} aria-label={x.titulo} />
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="lugar__copy">

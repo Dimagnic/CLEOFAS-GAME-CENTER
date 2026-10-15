@@ -1,5 +1,6 @@
 import { useEstacionesPublicas } from '../lib/estacionesPublicas'
 import { horarioHoyTexto } from '../data/negocio'
+import FondoVideo from './FondoVideo'
 import './Hero.css'
 
 export default function Hero() {
@@ -11,6 +12,7 @@ export default function Hero() {
 
   return (
     <section className="hero">
+      <FondoVideo posicion="50% 45%" />
       <div className="hero__orbe" aria-hidden="true" />
       <div className="wrap hero__grid">
         <div className="hero__copy">

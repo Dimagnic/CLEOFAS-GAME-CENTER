@@ -8,12 +8,14 @@ import Contact from '../components/Contact'
 import Ticker from '../components/Ticker'
 import Lugar from '../components/Lugar'
 import Efectos from '../components/Efectos'
+import Particulas from '../components/Particulas'
 import Footer from '../components/Footer'
 import FloatingSocial from '../components/FloatingSocial'
 
 export default function Home() {
   return (
     <>
+      <Particulas />
       <Navbar />
       <main>
         <Hero />

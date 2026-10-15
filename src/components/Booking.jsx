@@ -4,6 +4,7 @@ import {
   MAX_HORAS, precioPorHoras, iniciosPosibles, hhmm, ahoraMX, sumarDias, api,
 } from '../lib/reservas'
 import { NEGOCIO, horarioDe } from '../data/negocio'
+import FondoVideo from './FondoVideo'
 import './Booking.css'
 
 export default function Booking() {
@@ -23,6 +24,7 @@ export default function Booking() {
 
   return (
     <section id="reservar" className="section booking">
+      <FondoVideo posicion="50% 80%" />
       <div className="wrap booking__grid">
         <div>
           <p className="eyebrow">Sin filas en la entrada</p>

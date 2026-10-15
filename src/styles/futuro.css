@@ -278,3 +278,54 @@ html, body { overflow-x: clip; }
   .js-fx [data-fx] { opacity: 1; transform: none; filter: none; }
 }
 @media (hover: none) { .station-card, .price-card, .service-card { transform: none !important; } }
+
+/* ===== Más efectos: video de fondo, chispas, foco de cursor ===== */
+.particulas { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; opacity: .8; }
+main, .footer, .nav { position: relative; z-index: 1; }
+.nav { position: sticky; z-index: 50; }
+.fx-foco {
+  position: fixed; top: 0; left: 0; width: 400px; height: 400px; z-index: 2; pointer-events: none; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 42, 42, .13), transparent 65%); mix-blend-mode: screen; will-change: transform;
+}
+@media (hover: none) { .fx-foco { display: none; } }
+
+.fondo-video { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.fondo-video video { width: 100%; height: 100%; object-fit: cover; opacity: .3; filter: saturate(1.3) contrast(1.1); }
+.fondo-video::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(3,5,10,.92) 8%, rgba(3,5,10,.35) 55%, rgba(3,5,10,.8)),
+              linear-gradient(180deg, rgba(3,5,10,.5), transparent 30%, transparent 70%, var(--color-bg));
+}
+.booking { position: relative; overflow: hidden; }
+.booking > .wrap { position: relative; z-index: 1; }
+.hero__grid { z-index: 2; }
+
+.lugar__tabs { position: absolute; z-index: 3; bottom: 14px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; }
+.lugar__tabs button { width: 26px; height: 5px; background: rgba(255,255,255,.35); transition: background .2s, width .2s; }
+.lugar__tabs button.on { background: var(--color-accent-bright); width: 40px; box-shadow: 0 0 10px var(--color-accent-bright); }
+
+/* luz de neón que respira en los bordes de la página */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: 3; pointer-events: none;
+  box-shadow: inset 0 0 120px rgba(225, 11, 11, .12); animation: borde 7s ease-in-out infinite;
+}
+@keyframes borde { 50% { box-shadow: inset 0 0 160px rgba(46, 196, 255, .12); } }
+
+/* franja: segunda fila inversa, y la tarifa destacada con destello */
+.ticker__track { animation-duration: 30s; }
+.price-card--destacado::after { opacity: 1; background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.12) 50%, transparent 65%) -150% 0 / 250% 100% no-repeat; animation: destello 3.6s ease-in-out infinite; }
+@keyframes destello { to { background-position: 150% 0; } }
+
+/* campos y títulos */
+.booking__tabs button { transition: color .2s, text-shadow .2s; }
+.booking__tabs button:hover { text-shadow: 0 0 10px rgba(255, 42, 42, .7); }
+.stations__title, .pricing__title, .services__title, .booking__title, .contact__title, .lugar__title { background: linear-gradient(90deg, #fff 40%, #ffb3b3 60%, #fff); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: brillo 6s linear infinite; }
+.lugar__title .hl { -webkit-text-fill-color: var(--color-accent-bright); }
+@keyframes brillo { to { background-position: -200% 0; } }
+
+@media (max-width: 860px) { .fondo-video video { opacity: .18; } }
+@media (prefers-reduced-motion: reduce) {
+  .fondo-video, .particulas, .fx-foco { display: none; }
+  body::after { animation: none; }
+  .stations__title, .pricing__title, .services__title, .booking__title, .contact__title, .lugar__title { animation: none; }
+}
