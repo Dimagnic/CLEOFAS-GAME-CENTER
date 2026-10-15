@@ -64,6 +64,10 @@ export default function Navbar() {
               <b>0{i + 1}</b>{l.label}
             </a>
           ))}
+          <Link to="/panel" onClick={cerrar} className="nav__panel" style={{ '--i': LINKS.length }} aria-label="Panel de control">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="1" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+            <span>Panel</span>
+          </Link>
           <a href="#reservar" onClick={cerrar} className="nav__cta btn btn-primary" style={{ '--i': LINKS.length }}>Reservar ahora</a>
         </nav>
 

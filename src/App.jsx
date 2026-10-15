@@ -10,6 +10,7 @@ import Cashbox from './pages/admin/Cashbox'
 import { AuthProvider } from './lib/AuthContext'
 import { StationsProvider } from './lib/StationsStore'
 import './styles/futuro.css'
+import './styles/panel.css'
 
 export default function App() {
   return (

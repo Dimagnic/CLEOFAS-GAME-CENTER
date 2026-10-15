@@ -72,3 +72,15 @@ a.nav__top-item:hover { color: var(--color-accent-bright); text-shadow: 0 0 10px
 @media (prefers-reduced-motion: reduce) { .nav__dot { animation: none; } .nav__links { transition: none; } }
 
 .nav--open { backdrop-filter: none; background: transparent; }
+
+/* botón del panel de control */
+.nav__links a.nav__panel { display: inline-flex; align-items: center; gap: .45rem; padding: .55em .9em; color: var(--color-ink-muted);
+  border: 1px solid var(--color-line-strong); background: rgba(10, 18, 32, .6); font-size: .78rem; letter-spacing: .1em;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); transition: color .2s, border-color .2s, background .2s, box-shadow .2s; }
+.nav__panel svg { width: 15px; height: 15px; }
+.nav__links a.nav__panel:hover { color: #fff; border-color: var(--color-cyan); background: rgba(46, 196, 255, .12); box-shadow: 0 0 16px rgba(46, 196, 255, .35); }
+.nav__links a.nav__panel::after { display: none; }
+@media (max-width: 860px) {
+  .nav__links a.nav__panel { font-size: 1rem; padding: .7em 1.2em; opacity: 0; transform: translateX(-24px); transition: opacity .4s var(--ease) calc(.15s + var(--i) * .07s), transform .4s var(--ease) calc(.15s + var(--i) * .07s); }
+  .nav__links--open a.nav__panel { opacity: 1; transform: none; }
+}
