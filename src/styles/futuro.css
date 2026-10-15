@@ -156,3 +156,35 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-accent-bri
 html, body { overflow-x: clip; }
 .hero__title { font-size: clamp(2.4rem, 1.8rem + 3vw, 4.2rem); }
 .hero__title .hl { display: inline; }
+
+/* sección con video */
+.lugar__grid { display: grid; grid-template-columns: minmax(0, 380px) 1fr; gap: var(--space-5); align-items: center; }
+.lugar__video {
+  position: relative; aspect-ratio: 768 / 1230; width: 100%; background: #000; overflow: hidden;
+  border: 1px solid rgba(255, 42, 42, 0.45);
+  box-shadow: 0 0 50px rgba(225, 11, 11, 0.28), 0 0 90px rgba(46, 196, 255, 0.1);
+  clip-path: polygon(22px 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%, 0 22px);
+}
+.lugar__video video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lugar__video::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,.14) 0 1px, transparent 1px 3px), linear-gradient(180deg, transparent 70%, rgba(3,5,10,.7));
+}
+.lugar__rec {
+  position: absolute; left: 14px; top: 14px; z-index: 2; display: inline-flex; align-items: center; gap: .5em;
+  font-family: var(--font-mono); font-size: .75rem; letter-spacing: .14em; color: #fff;
+  background: rgba(3, 5, 10, .7); padding: .35em .8em; border: 1px solid rgba(255, 42, 42, .5);
+}
+.lugar__rec i { width: 8px; height: 8px; border-radius: 50%; background: var(--color-accent-bright); animation: pulso 1.2s ease-in-out infinite; box-shadow: 0 0 10px var(--color-accent-bright); }
+.lugar__title { font-size: clamp(2.2rem, 1.6rem + 2.6vw, 3.8rem); margin: .5rem 0 1rem; }
+.lugar__lead { color: var(--color-ink-muted); max-width: 46ch; }
+.lugar__datos { list-style: none; padding: 0; margin: var(--space-4) 0 var(--space-2); display: flex; gap: var(--space-4); flex-wrap: wrap; }
+.lugar__datos li { border-left: 2px solid var(--color-accent); padding-left: var(--space-2); display: flex; flex-direction: column; }
+.lugar__datos strong { font-family: var(--font-display); font-size: 2.6rem; line-height: 1; text-shadow: 0 0 20px rgba(255, 42, 42, .45); }
+.lugar__datos span { color: var(--color-ink-muted); font-size: .85rem; text-transform: uppercase; letter-spacing: .1em; }
+.lugar__hoy { font-family: var(--font-mono); color: var(--color-cyan); margin-bottom: var(--space-3); }
+@media (max-width: 860px) {
+  .lugar__grid { grid-template-columns: 1fr; }
+  .lugar__video { max-width: 340px; margin: 0 auto; }
+}
+@media (prefers-reduced-motion: reduce) { .lugar__rec i { animation: none; } }

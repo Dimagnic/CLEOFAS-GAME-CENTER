@@ -6,6 +6,7 @@ import Services from '../components/Services'
 import Booking from '../components/Booking'
 import Contact from '../components/Contact'
 import Ticker from '../components/Ticker'
+import Lugar from '../components/Lugar'
 import Footer from '../components/Footer'
 import FloatingSocial from '../components/FloatingSocial'
 
@@ -16,6 +17,7 @@ export default function Home() {
       <main>
         <Hero />
         <Ticker />
+        <Lugar />
         <StationsBoard />
         <Pricing />
         <Services />
