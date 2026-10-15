@@ -144,7 +144,6 @@ input:focus, select:focus, textarea:focus { border-color: var(--color-accent-bri
 .admin-table th { text-transform: uppercase; letter-spacing: 0.1em; font-family: var(--font-display); }
 
 /* pie */
-.footer { border-top: 1px solid rgba(255, 42, 42, 0.35); box-shadow: 0 -10px 40px rgba(225, 11, 11, 0.08); }
 
 /* botones flotantes: halo al pasar el cursor, se conservan tal cual */
 @media (max-width: 860px) {
@@ -267,8 +266,6 @@ html, body { overflow-x: clip; }
 /* contacto y pie */
 .contact__list li { transition: transform .25s var(--ease); }
 .contact__list li:hover { transform: translateX(8px); }
-.footer a { transition: color .2s, text-shadow .2s; }
-.footer a:hover { color: var(--color-accent-bright); text-shadow: 0 0 10px rgba(255, 42, 42, .6); }
 
 /* luz de neón que recorre el menú al hacer scroll */
 .nav--scrolled { animation: neonNav 6s ease-in-out infinite; }

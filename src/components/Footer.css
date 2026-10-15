@@ -1,73 +1,135 @@
-/* Pie de página: mismo fondo oscuro de la web, línea azul de acento arriba y textos claros bien legibles.
-   El logo de Cero+ es un PNG transparente con letras claras (public/logo-cero-claro.png). */
+/* Pie de página futurista: rayo de neón, llamada a la acción, marca gigante y redes con efecto. */
 .footer {
-  background: var(--color-bg-raised);
-  border-top: 2px solid var(--color-accent);
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(700px 300px at 15% 0%, rgba(225, 11, 11, 0.18), transparent 65%),
+    radial-gradient(600px 300px at 90% 100%, rgba(46, 196, 255, 0.1), transparent 65%),
+    linear-gradient(180deg, #060b16, #03050A);
+  border-top: 0;
   color: var(--color-ink-muted);
   padding: var(--space-5) 0 var(--space-3);
   font-family: var(--font-body);
   font-size: 0.92rem;
 }
-.footer h3 { color: var(--color-ink); }
-.footer p,
-.footer li { color: var(--color-ink-muted); }
-.footer a { color: var(--color-ink); text-decoration: none; }
-.footer a:hover,
-.footer a:focus-visible { color: var(--color-accent); text-decoration: underline; text-underline-offset: 3px; }
-
-.footer__grid {
-  display: grid;
-  grid-template-columns: 1.6fr 1fr 1.4fr;
-  gap: var(--space-4);
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--color-line-strong);
+/* rejilla técnica */
+.footer::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(120, 160, 220, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 160, 220, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: linear-gradient(180deg, #000, transparent 85%);
 }
+.footer > * { position: relative; }
+/* rayo de luz que recorre el borde superior */
+.footer__rayo { position: absolute !important; top: 0; left: 0; right: 0; height: 3px; background: rgba(255, 42, 42, 0.3); overflow: hidden; }
+.footer__rayo::after {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 30%; left: -30%;
+  background: linear-gradient(90deg, transparent, var(--color-accent-bright), var(--color-cyan), transparent);
+  box-shadow: 0 0 18px var(--color-accent-bright);
+  animation: rayo 4.5s ease-in-out infinite;
+}
+@keyframes rayo { to { left: 100%; } }
+
+.footer h3 { color: var(--color-ink); }
+.footer p, .footer li { color: var(--color-ink-muted); }
+.footer a { color: var(--color-ink); text-decoration: none; }
+
+/* llamada a la acción */
+.footer .footer__cta {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap;
+  padding-bottom: var(--space-4); margin-bottom: var(--space-4); border-bottom: 1px solid var(--color-line-strong);
+}
+.footer__cta-titulo { font-size: clamp(2rem, 1.5rem + 2.4vw, 3.4rem); margin-top: 0.4rem; }
+.footer__cta-acciones { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+.footer .footer__grid { display: grid; grid-template-columns: 1.6fr 1fr 1.4fr; gap: var(--space-4); padding-bottom: var(--space-4); }
 .footer__col p { margin: 0.8rem 0 0; line-height: 1.55; max-width: 38ch; }
 .footer__col h3 {
-  margin: 0 0 0.9rem;
-  font-family: var(--font-display);
-  font-size: 0.95rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  margin: 0 0 1rem; font-family: var(--font-display); font-size: 1rem; letter-spacing: 0.12em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 0.6rem;
 }
-.footer__col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; }
-.footer__brand {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--color-ink);
-}
-.footer__brand span { color: var(--color-ink); }
-.footer__brand img { border-radius: 8px; }
+.footer__col h3::before { content: ""; width: 18px; height: 2px; background: var(--color-accent-bright); box-shadow: 0 0 8px var(--color-accent-bright); }
+.footer__col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
 
-.footer__bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-  padding-top: var(--space-3);
-  font-size: 0.82rem;
+/* marca */
+.footer__brand { display: flex; align-items: center; gap: 0.8rem; font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; letter-spacing: 0.05em; color: var(--color-ink); }
+.footer__brand b { color: var(--color-accent-bright); font-weight: 700; }
+.footer__brand img { border-radius: 2px; box-shadow: 0 0 16px rgba(255, 42, 42, 0.55); }
+
+/* estado abierto / cerrado */
+.footer__estado { display: inline-flex !important; align-items: center; gap: 0.6rem; font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.06em; padding: 0.4em 0.9em; border: 1px solid var(--color-line-strong); background: rgba(10, 18, 32, 0.6); }
+.footer__estado i { width: 8px; height: 8px; border-radius: 50%; background: var(--color-busy); box-shadow: 0 0 8px var(--color-busy); }
+.footer__estado--on { color: var(--color-ok) !important; border-color: rgba(43, 224, 139, 0.4); }
+.footer__estado--on i { background: var(--color-ok); box-shadow: 0 0 10px var(--color-ok); animation: pulso 1.6s ease-in-out infinite; }
+
+/* redes */
+.footer__redes { display: flex; gap: 0.7rem; margin-top: 1.1rem; }
+.footer__red {
+  width: 44px; height: 44px; display: grid; place-items: center; color: var(--color-ink);
+  border: 1px solid var(--color-line-strong); background: rgba(10, 18, 32, 0.7);
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  transition: transform 0.25s var(--ease), background 0.25s, color 0.25s, box-shadow 0.25s;
+}
+.footer__red svg { width: 20px; height: 20px; }
+.footer__red:hover { transform: translateY(-5px) scale(1.08); color: #fff; }
+.footer__red--tiktok:hover { background: #111; box-shadow: 0 0 20px #25F4EE, 0 0 20px #FE2C55; }
+.footer__red--instagram:hover { background: linear-gradient(45deg, #f9a03f, #dd2a7b, #8134af); box-shadow: 0 0 20px rgba(221, 42, 123, 0.7); }
+.footer__red--facebook:hover { background: #1877F2; box-shadow: 0 0 20px rgba(24, 119, 242, 0.7); }
+.footer__red--whatsapp:hover { background: #25D366; box-shadow: 0 0 20px rgba(37, 211, 102, 0.7); }
+
+/* enlaces con flecha que se desliza */
+.footer__nav a, .footer__col li > a { position: relative; display: inline-block; transition: transform 0.25s var(--ease), color 0.2s; }
+.footer__nav a::before { content: "›"; position: absolute; left: -14px; opacity: 0; color: var(--color-accent-bright); transition: opacity 0.2s, left 0.25s var(--ease); }
+.footer__nav a:hover { transform: translateX(14px); color: var(--color-accent-bright); }
+.footer__nav a:hover::before { opacity: 1; left: -14px; }
+.footer__col li > a:hover { color: var(--color-accent-bright); }
+
+/* marca gigante de fondo */
+.footer__marca {
+  font-family: var(--font-display); font-weight: 700; text-align: center; user-select: none; pointer-events: none;
+  font-size: clamp(4rem, 17vw, 15rem); line-height: 0.8; letter-spacing: 0.06em; margin: var(--space-3) 0 0;
+  color: transparent; -webkit-text-stroke: 1px rgba(255, 42, 42, 0.45);
+  background: linear-gradient(90deg, transparent 0 30%, rgba(255, 42, 42, 0.5) 50%, transparent 70% 100%) -100% 0 / 300% 100% no-repeat;
+  -webkit-background-clip: text; background-clip: text;
+  animation: marca 6s ease-in-out infinite; opacity: 0.85;
+  mask-image: linear-gradient(180deg, #000 30%, transparent 95%);
+}
+@keyframes marca { to { background-position: 200% 0; } }
+
+.footer .footer__bottom {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap;
+  padding-top: var(--space-3); margin-top: var(--space-2); border-top: 1px solid var(--color-line-strong); font-size: 0.82rem;
 }
 .footer__bottom p { margin: 0; }
-.footer__admin { text-decoration: underline; text-underline-offset: 3px; color: var(--color-ink-muted) !important; }
-.footer__admin:hover { color: var(--color-accent) !important; }
+.footer__legal { display: flex; gap: 1.2rem; flex-wrap: wrap; }
+.footer__legal a, .footer__admin { text-decoration: underline; text-underline-offset: 3px; transition: color 0.2s; }
+.footer__admin { color: var(--color-ink-muted) !important; }
+.footer__admin:hover, .footer__legal a:hover { color: var(--color-accent-bright) !important; }
 .footer__dev { display: flex; align-items: center; gap: 0.75rem; color: var(--color-ink-muted); }
 .footer__dev img { display: block; height: 38px; width: auto; }
+.footer__cero { display: inline-flex; transition: transform 0.2s ease, filter 0.2s ease; opacity: 0.92; }
+.footer__cero:hover, .footer__cero:focus-visible { transform: scale(1.08); filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5)); opacity: 1; }
+
+/* volver arriba */
+.footer__arriba {
+  position: absolute !important; right: 24px; top: 24px; width: 46px; height: 46px; display: grid; place-items: center; color: #fff; z-index: 3;
+  background: linear-gradient(135deg, var(--color-accent-bright), var(--color-accent));
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  box-shadow: 0 0 20px rgba(225, 11, 11, 0.6); transition: transform 0.25s var(--ease);
+}
+.footer__arriba svg { width: 20px; height: 20px; animation: sube 1.8s ease-in-out infinite; }
+.footer__arriba:hover { transform: translateY(-5px); }
+@keyframes sube { 50% { transform: translateY(-3px); } }
 
 @media (max-width: 800px) {
-  .footer__grid { grid-template-columns: 1fr; gap: var(--space-3); }
-  .footer__bottom { flex-direction: column; align-items: flex-start; }
+  .footer .footer__grid { grid-template-columns: 1fr; gap: var(--space-4); }
+  .footer .footer__bottom { flex-direction: column; align-items: flex-start; }
+  .footer__arriba { top: 12px; right: 12px; width: 40px; height: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .footer__rayo::after, .footer__marca, .footer__estado--on i, .footer__arriba svg { animation: none; }
 }
 
-/* Redes y logo de Cero+ con enlace */
-.footer__redes { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.3rem; }
-.footer__cero { display: inline-flex; transition: transform 0.2s ease, opacity 0.2s ease; opacity: 0.92; }
-.footer__cero:hover,
-.footer__cero:focus-visible { transform: scale(1.06); opacity: 1; }
-
-.footer__legal { display: flex; gap: 1.2rem; flex-wrap: wrap; }
-.footer__legal a { text-decoration: underline; text-underline-offset: 3px; }
+.footer__cta-titulo { color: #fff; }
