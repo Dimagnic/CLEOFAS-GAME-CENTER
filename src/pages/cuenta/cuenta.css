@@ -163,3 +163,72 @@
   .cuenta-carnet__brillo, .cuenta-progreso__barra i, .cuenta-grid > *, .cuenta-panel, .cuenta-hero { animation: none !important; }
 }
 .cuenta-lista, .cuenta-rangos, .cuenta-historial { list-style: none; margin: 0; padding: 0; }
+
+/* ===== Fase 2: cupones y novedades ===== */
+.cuenta-contador { display: inline-grid; place-items: center; min-width: 26px; height: 26px; margin-left: 6px; font-size: .85rem; background: var(--color-accent); color: #fff; vertical-align: middle; }
+.cuenta-panel__head { gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-2); }
+.cuenta-panel__head h2 { margin-bottom: 0; }
+
+.cupones { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-2); }
+.cupones--historial { margin-top: var(--space-2); }
+.cupon { display: grid; grid-template-columns: 96px 1fr; position: relative; background: linear-gradient(120deg, rgba(225, 11, 11, .16), rgba(10, 18, 32, .9) 55%); border: 1px solid rgba(255, 42, 42, .5); }
+.cupon::before, .cupon::after { content: ""; position: absolute; left: 88px; width: 16px; height: 16px; border-radius: 50%; background: var(--color-bg-raised); border: 1px solid rgba(255, 42, 42, .5); }
+.cupon::before { top: -9px; } .cupon::after { bottom: -9px; }
+.cupon__valor { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--space-2) 6px; border-right: 2px dashed rgba(255, 42, 42, .45); text-align: center; }
+.cupon__valor b { font-family: var(--font-display); font-size: 1.9rem; line-height: 1; color: var(--color-accent-bright); text-shadow: 0 0 18px rgba(255, 42, 42, .5); }
+.cupon__valor span { font-family: var(--font-mono); font-size: .68rem; text-transform: uppercase; letter-spacing: .12em; color: var(--color-ink-faint); margin-top: 4px; }
+.cupon__info { padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3); display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cupon__info strong { font-family: var(--font-display); font-size: var(--step-0); text-transform: uppercase; letter-spacing: .04em; }
+.cupon__info span { font-size: .8rem; color: var(--color-ink-muted); }
+.cupon__info code { font-family: var(--font-mono); letter-spacing: .2em; color: var(--color-cyan); font-size: .85rem; }
+.cupon__info em { font-style: normal; font-size: .72rem; color: var(--color-ink-faint); }
+.cupon--usado, .cupon--vencido, .cupon--anulado { filter: grayscale(1); opacity: .5; }
+
+.novedades__filtros { display: flex; gap: 4px; flex-wrap: wrap; }
+.novedades__filtros button { padding: .35em .8em; font-family: var(--font-mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--color-ink-muted); border: 1px solid var(--color-line); }
+.novedades__filtros button.is-active, .novedades__filtros button:hover { color: var(--color-ink); border-color: var(--color-accent-bright); background: rgba(255, 42, 42, .1); }
+.novedades { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-2); }
+
+.novedad { --tipo: #2EC4FF; display: flex; flex-direction: column; background: var(--color-bg); border: 1px solid var(--color-line); border-top: 3px solid var(--tipo); overflow: hidden; transition: transform .25s var(--ease), box-shadow .25s; }
+.novedad:hover { transform: translateY(-3px); box-shadow: 0 10px 30px color-mix(in srgb, var(--tipo) 22%, transparent); }
+.novedad--destacada { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr; border-color: color-mix(in srgb, var(--tipo) 55%, transparent); box-shadow: 0 0 40px color-mix(in srgb, var(--tipo) 18%, transparent); }
+.novedad--destacada.novedad--imagen { grid-template-columns: 1.1fr 1fr; }
+.novedad__img { position: relative; aspect-ratio: 16 / 9; background: var(--color-bg-raised-2); }
+.novedad--destacada .novedad__img { aspect-ratio: auto; min-height: 220px; }
+.novedad__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.novedad__fecha { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; align-items: center; padding: 6px 10px; background: rgba(3, 5, 10, .85); border: 1px solid var(--tipo); font-family: var(--font-mono); font-size: .7rem; text-transform: uppercase; color: var(--color-ink-muted); }
+.novedad__fecha b { font-family: var(--font-display); font-size: 1.5rem; line-height: 1; color: var(--color-ink); }
+.novedad__cuerpo { padding: var(--space-2) var(--space-3) var(--space-3); display: flex; flex-direction: column; gap: 8px; }
+.novedad__meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.novedad__tipo, .novedad__flag, .novedad__exclusivo { font-family: var(--font-mono); font-size: .66rem; text-transform: uppercase; letter-spacing: .12em; padding: .25em .6em; }
+.novedad__tipo { color: #03050A; background: var(--tipo); font-weight: 700; }
+.novedad__flag { color: var(--color-warn); border: 1px solid rgba(255, 178, 56, .5); }
+.novedad__flag--pronto { color: var(--color-ok); border-color: rgba(43, 224, 139, .5); }
+.novedad__exclusivo { --rango: #FFB238; color: var(--rango); border: 1px solid var(--rango); }
+.novedad h3 { font-size: var(--step-1); line-height: 1.15; }
+.novedad--destacada h3 { font-size: var(--step-2); }
+.novedad__cuando { font-size: .82rem; color: var(--tipo); text-transform: capitalize; }
+.novedad__texto { font-size: var(--step--1); color: var(--color-ink-muted); line-height: 1.55; white-space: pre-line; }
+.novedad__pie { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; margin-top: auto; padding-top: 4px; }
+.novedad__vigencia { font-size: .72rem; color: var(--color-ink-faint); font-family: var(--font-mono); }
+
+@media (max-width: 860px) {
+  .novedad--destacada.novedad--imagen { grid-template-columns: 1fr; }
+  .novedad--destacada .novedad__img { min-height: 0; aspect-ratio: 16 / 9; }
+  .novedades, .cupones { grid-template-columns: 1fr; }
+}
+.novedad--destacada .novedad__img { min-height: 0; max-height: 380px; aspect-ratio: 16 / 10; }
+.novedad--destacada.novedad--imagen { align-items: start; }
+.novedad__cuando { text-transform: none; }
+.novedad__cuando::first-letter { text-transform: uppercase; }
+
+/* ===== Fase 3 ===== */
+.cuenta-acceso__fila { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-1); }
+.cuenta-acceso__form input[type="date"] { color-scheme: dark; }
+.cuenta-form input[type="date"] { color-scheme: dark; }
+.cuenta-check--form { grid-column: 1 / -1; font-family: var(--font-body) !important; text-transform: none !important; letter-spacing: 0 !important; color: var(--color-ink-muted) !important; font-size: var(--step--1) !important; }
+.cuenta-campana { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border: 1px solid rgba(43, 224, 139, .5); background: linear-gradient(90deg, rgba(43, 224, 139, .14), rgba(43, 224, 139, .02)); animation: aparece .6s var(--ease) both; }
+.cuenta-campana b { font-family: var(--font-display); font-size: var(--step-3); line-height: 1; color: var(--color-ok); text-shadow: 0 0 20px rgba(43, 224, 139, .6); }
+.cuenta-campana strong { display: block; font-family: var(--font-display); text-transform: uppercase; letter-spacing: .05em; }
+.cuenta-campana span { font-size: var(--step--1); color: var(--color-ink-muted); }
+@media (max-width: 860px) { .cuenta-acceso__fila { grid-template-columns: 1fr; } }

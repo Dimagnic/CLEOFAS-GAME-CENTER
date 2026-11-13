@@ -310,3 +310,89 @@
 .admin-modal--ancho .admin-card__value { font-size: var(--step-1); }
 /* La animación de entrada no debe dejar un transform fijo: encierra a los modales (position: fixed). */
 .admin__content { animation-fill-mode: backwards !important; }
+
+/* ===== Fase 2 ===== */
+.cupon-selector { display: flex; flex-direction: column; gap: 4px; }
+.cupon-selector label { display: grid !important; grid-template-columns: 18px 1fr auto; gap: 8px; align-items: center; padding: .5em .7em; border: 1px solid var(--color-line); cursor: pointer; font-size: .82rem; color: var(--color-ink-muted); }
+.cupon-selector label.is-on { border-color: var(--color-accent-bright); background: rgba(255, 42, 42, .08); color: var(--color-ink); }
+.cupon-selector input { accent-color: var(--color-accent); margin: 0; }
+.cupon-selector strong { color: var(--color-ink); font-weight: 500; }
+.cupon-selector small { display: block; font-family: var(--font-mono); font-size: .7rem; color: var(--color-ink-faint); }
+.cupon-selector b { font-family: var(--font-display); color: var(--color-ok); }
+.admin-modal__total { display: flex; justify-content: space-between; align-items: baseline; padding-top: 8px; border-top: 1px solid var(--color-line-strong); font-size: var(--step--1); color: var(--color-ink-muted); }
+.admin-modal__total b { font-family: var(--font-display); font-size: var(--step-1); color: var(--color-ink); }
+.admin-modal { max-height: 92vh; overflow: auto; }
+
+/* cupones (panel) */
+.emitir { padding: var(--space-3); background: var(--color-bg-raised); border: 1px solid var(--color-line); }
+.emitir__plantillas { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: var(--space-2); }
+.emitir__plantillas button { display: flex; align-items: center; gap: 8px; padding: .5em .9em; border: 1px dashed rgba(255, 42, 42, .5); font-size: .82rem; color: var(--color-ink-muted); }
+.emitir__plantillas button b { font-family: var(--font-display); color: var(--color-accent-bright); font-size: 1.05rem; }
+.emitir__plantillas button:hover, .emitir__plantillas button.is-on { border-style: solid; color: var(--color-ink); background: rgba(255, 42, 42, .08); }
+.emitir__form { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); align-items: end; }
+.emitir__form label, .editor-pub label { display: flex; flex-direction: column; gap: 6px; font-size: .72rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--color-ink-faint); }
+.emitir__form input, .emitir__form select, .emitir__destino select, .editor-pub input:not([type="checkbox"]), .editor-pub textarea, .editor-pub select {
+  padding: .65em .8em; background: rgba(3, 5, 10, .8); border: 1px solid var(--color-line-strong); color: var(--color-ink); font: inherit; font-size: var(--step--1); text-transform: none; letter-spacing: 0; width: 100%; }
+.emitir__destino { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; font-size: .72rem; font-family: var(--font-mono); text-transform: uppercase; color: var(--color-ink-faint); }
+.emitir__destino > * { text-transform: none; font-family: var(--font-body); }
+.emitir__form > .btn { grid-column: 1 / -1; justify-self: start; }
+.estado-cupon--disponible { color: var(--color-ok); }
+.estado-cupon--usado { color: var(--color-cyan); }
+.estado-cupon--vencido, .estado-cupon--anulado { color: var(--color-ink-faint); }
+
+/* publicaciones (panel) */
+.admin-page__head--accion { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--space-2); flex-wrap: wrap; }
+.pubs { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--space-2); }
+.pubs__item { display: flex; flex-direction: column; gap: 8px; }
+.pubs__item .novedad--destacada { grid-template-columns: 1fr !important; }
+.pubs__acciones { display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center; }
+.pub-estado { font-family: var(--font-mono); font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; padding: .2em .6em; border: 1px solid currentColor; }
+.pub-estado--visible { color: var(--color-ok); }
+.pub-estado--programada { color: var(--color-warn); }
+.pub-estado--borrador, .pub-estado--caducada { color: var(--color-ink-faint); }
+.editor-pub.admin-modal--ancho { display: grid; grid-template-columns: 1.3fr 1fr; gap: var(--space-3); max-width: 1100px; width: min(1100px, 96vw); }
+.editor-pub__campos { display: flex; flex-direction: column; gap: var(--space-2); }
+.editor-pub__fila { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--space-1); }
+.editor-pub__img { display: flex; flex-direction: column; gap: 6px; }
+.editor-pub__img input[type="file"] { padding: .5em; font-size: .78rem; }
+.editor-pub__checks { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+.editor-pub__checks label { flex-direction: row; align-items: center; gap: 8px; text-transform: none; font-family: var(--font-body); font-size: var(--step--1); color: var(--color-ink-muted); }
+.editor-pub__checks input { accent-color: var(--color-accent); }
+.editor-pub__vista { display: flex; flex-direction: column; gap: 8px; position: sticky; top: 0; align-self: start; }
+.editor-pub__vista .novedad--destacada { grid-template-columns: 1fr !important; }
+@media (max-width: 1000px) {
+  .emitir__form { grid-template-columns: 1fr 1fr; }
+  .editor-pub.admin-modal--ancho { grid-template-columns: 1fr; }
+}
+
+/* ===== Fase 3: automatización ===== */
+.reglas { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: var(--space-2); }
+.regla { --rango: var(--color-ink-faint); padding: var(--space-3); background: var(--color-bg-raised); border: 1px solid var(--color-line); border-left: 3px solid var(--rango); display: flex; flex-direction: column; gap: var(--space-2); opacity: .7; transition: opacity .2s, border-color .2s; }
+.regla.is-on { opacity: 1; border-color: rgba(43, 224, 139, .45); border-left-color: var(--rango, var(--color-ok)); }
+.regla__head { display: flex; justify-content: space-between; gap: var(--space-2); }
+.regla__head h3 { font-size: var(--step-1); text-transform: uppercase; }
+.regla__head p { font-size: .8rem; color: var(--color-ink-faint); margin-top: 2px; }
+.regla__campos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.regla__ancho { grid-column: span 2; }
+.regla label, .campana-form label { display: flex; flex-direction: column; gap: 4px; font-size: .68rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .05em; color: var(--color-ink-faint); }
+.regla input, .regla select, .campana-form input, .campana-form select { padding: .55em .7em; background: rgba(3, 5, 10, .8); border: 1px solid var(--color-line-strong); color: var(--color-ink); font: inherit; font-size: var(--step--1); text-transform: none; letter-spacing: 0; width: 100%; color-scheme: dark; }
+.regla .btn { align-self: flex-start; }
+.interruptor { position: relative; width: 48px; height: 26px; flex: none; cursor: pointer; }
+.interruptor input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.interruptor span { position: absolute; inset: 0; background: rgba(3, 5, 10, .9); border: 1px solid var(--color-line-strong); transition: .2s; pointer-events: none; }
+.interruptor span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: var(--color-ink-faint); transition: .2s var(--ease); }
+.interruptor input:checked + span { border-color: var(--color-ok); background: rgba(43, 224, 139, .15); }
+.interruptor input:checked + span::after { left: 25px; background: var(--color-ok); box-shadow: 0 0 10px var(--color-ok); }
+.campana-form { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 8px; align-items: end; margin: var(--space-2) 0 var(--space-3); padding: var(--space-3); background: var(--color-bg-raised); border: 1px solid var(--color-line); }
+.campana-form__dias { grid-column: 1 / 5; display: flex; flex-direction: column; gap: 4px; font-size: .68rem; font-family: var(--font-mono); text-transform: uppercase; color: var(--color-ink-faint); }
+.campana-form__dias div { display: flex; gap: 4px; flex-wrap: wrap; }
+.campana-form__dias button { padding: .45em .8em; border: 1px solid var(--color-line-strong); font-family: var(--font-mono); font-size: .75rem; color: var(--color-ink-muted); }
+.campana-form__dias button.is-on { border-color: var(--color-ok); color: var(--color-ok); background: rgba(43, 224, 139, .1); }
+.emitir__avisar { grid-column: 1 / -1; flex-direction: row !important; align-items: center; gap: 8px !important; text-transform: none !important; font-family: var(--font-body) !important; font-size: var(--step--1) !important; color: var(--color-ink-muted) !important; }
+.emitir__avisar input { width: auto !important; accent-color: var(--color-accent); }
+.admin-link:disabled { opacity: .45; cursor: not-allowed; }
+@media (max-width: 1000px) {
+  .campana-form { grid-template-columns: 1fr 1fr; }
+  .campana-form__dias { grid-column: 1 / -1; }
+  .regla__campos { grid-template-columns: 1fr 1fr; }
+}

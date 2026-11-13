@@ -7,7 +7,7 @@ import { NEGOCIO, horarioDe } from '../data/negocio'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabaseClient'
-import { conDescuento } from '../lib/socios'
+import { conDescuento, cuponesDisponibles, descuentoCupon, textoCupon } from '../lib/socios'
 import FondoVideo from './FondoVideo'
 import './Booking.css'
 
@@ -66,18 +66,22 @@ export default function Booking() {
 function useSocioReserva() {
   const { session } = useAuth()
   const [socio, setSocio] = useState(null)
+  const [cupones, setCupones] = useState([])
   useEffect(() => {
     const uid = session?.user?.id
-    if (!uid || session.demo) { setSocio(null); return }
+    if (!uid || session.demo) { setSocio(null); setCupones([]); return }
     supabase.from('socios').select('nombre, email, telefono, rangos(nombre, desc_horas, color)').eq('user_id', uid).maybeSingle()
       .then(({ data }) => setSocio(data ?? null), () => setSocio(null))
+    cuponesDisponibles(uid, 'horas').then(setCupones, () => setCupones([]))
   }, [session?.user?.id])
-  return { socio, token: session?.access_token }
+  return { socio, cupones, token: session?.access_token }
 }
 
 function FormReserva() {
   const { estaciones } = useEstacionesPublicas()
-  const { socio, token } = useSocioReserva()
+  const { socio, cupones, token } = useSocioReserva()
+  const [cuponId, setCuponId] = useState('')
+  const cupon = cupones.find((c) => c.id === cuponId) ?? null
   const pct = socio?.rangos?.desc_horas || 0
   const precio = (h) => conDescuento(precioPorHoras(h), pct)
   const libres = estaciones.filter((e) => e.estado !== 'mantenimiento')
@@ -129,7 +133,9 @@ function FormReserva() {
     return [...mapa.values()].sort((a, b) => a.min - b.min)
   }, [validos, fecha])
 
-  const total = precio(duracion)
+  const conRango = precio(duracion)
+  let total = conRango - descuentoCupon(cupon, conRango, 'horas')
+  if (cupon && total < 10) total = 0 // Stripe no cobra menos de $10: el cupón cubre el resto
   const listo = estacion && inicio !== null && validos.includes(inicio)
 
   async function onSubmit(e) {
@@ -147,6 +153,7 @@ function FormReserva() {
           email: f.get('email'),
           telefono: f.get('telefono'),
           estacion, fecha, inicioMin: inicio, duracion, aceptaPoliticas: acepta,
+          ...(cupon ? { cuponId: cupon.id } : {}),
         }),
       })
       window.location.href = url // pago seguro en Stripe
@@ -247,6 +254,21 @@ function FormReserva() {
         )}
       </div>
 
+      {socio && cupones.length > 0 && (
+        <label>
+          Usar un cupón
+          <select value={cuponId} onChange={(e) => setCuponId(e.target.value)}>
+            <option value="">No usar cupón ({cupones.length} disponible{cupones.length > 1 ? 's' : ''})</option>
+            {cupones.map((c) => <option key={c.id} value={c.id}>{c.titulo} — {textoCupon(c)}</option>)}
+          </select>
+        </label>
+      )}
+      {cupon && listo && (
+        <p className="booking__hint">
+          Precio {conRango !== precioPorHoras(duracion) ? `socio $${conRango}` : `$${conRango}`} − cupón ${conRango - total} = <strong>${total} MXN</strong>
+        </p>
+      )}
+
       {error && <p className="booking__error" role="alert">{error}</p>}
 
       <label className="booking__check">
@@ -258,7 +280,7 @@ function FormReserva() {
       </label>
 
       <button type="submit" className="btn btn-primary" disabled={!listo || !acepta || pagando}>
-        {pagando ? 'Redirigiendo al pago…' : !listo ? 'Elige estación y hora' : !acepta ? 'Acepta las políticas para continuar' : `Pagar $${total} MXN y reservar`}
+        {pagando ? (total === 0 ? 'Confirmando…' : 'Redirigiendo al pago…') : !listo ? 'Elige estación y hora' : !acepta ? 'Acepta las políticas para continuar' : total === 0 ? 'Reservar gratis con mi cupón' : `Pagar $${total} MXN y reservar`}
       </button>
       <p className="booking__hint">
         Pago seguro con Stripe. Tu horario se aparta 30 minutos mientras pagas.
