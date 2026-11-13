@@ -121,3 +121,10 @@
 .booking__check { display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.85rem; line-height: 1.45; color: var(--color-ink-muted); cursor: pointer; }
 .booking__check input { margin-top: 0.2rem; accent-color: var(--color-accent); width: 1.05rem; height: 1.05rem; flex: none; }
 .booking__check a, .booking__hint a { color: var(--color-accent); text-decoration: underline; text-underline-offset: 2px; }
+
+/* socio del club al reservar */
+.booking__socio { --rango: #9FB0CC; padding: .6em .9em; font-size: var(--step--1); color: var(--color-ink-muted); border-left: 3px solid var(--rango); background: color-mix(in srgb, var(--rango) 10%, transparent); }
+.booking__socio strong { color: var(--rango); text-transform: uppercase; font-family: var(--font-display); letter-spacing: .05em; }
+.booking__socio b { color: var(--color-ok); }
+.booking__socio--invitado { border-left-color: var(--color-cyan); background: rgba(46, 196, 255, .06); }
+.booking__socio a { color: var(--color-cyan); text-decoration: underline; }

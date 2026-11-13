@@ -8,6 +8,9 @@ const ICONOS = {
   estaciones: 'M3 4h18v12H3zM8 20h8M12 16v4',
   reservaciones: 'M3 5h18v16H3zM3 10h18M8 3v4M16 3v4',
   caja: 'M3 7h18v12H3zM3 7l3-4h12l3 4M15 13h2',
+  tienda: 'M6 2h12l-1 20H7zM6 7h12',
+  socios: 'M9 8a4 4 0 1 0 0-.01M2 21c1-4 4-6 7-6s6 2 7 6M17 11a3 3 0 1 0 0-.01M18 15c2 .5 3.5 2.5 4 5',
+  rangos: 'M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z',
 }
 
 const NAV = [
@@ -15,6 +18,9 @@ const NAV = [
   { to: '/panel/estaciones', label: 'Estaciones', ico: 'estaciones' },
   { to: '/panel/reservaciones', label: 'Reservaciones', ico: 'reservaciones' },
   { to: '/panel/caja', label: 'Caja del día', ico: 'caja' },
+  { to: '/panel/tienda', label: 'Tienda', ico: 'tienda' },
+  { to: '/panel/socios', label: 'Socios', ico: 'socios' },
+  { to: '/panel/rangos', label: 'Rangos', ico: 'rangos' },
 ]
 
 function Reloj() {
@@ -36,7 +42,21 @@ export default function AdminLayout() {
   const { session, esEquipo, loading, signOut } = useAuth()
 
   if (loading) return <div className="admin-loading">Cargando panel…</div>
-  if (!session || !esEquipo) return <Navigate to="/panel/login" replace />
+  if (!session) return <Navigate to="/panel/login" replace />
+  if (!esEquipo) {
+    // Un socio (cliente) con sesión iniciada no entra al panel.
+    return (
+      <div className="admin-login">
+        <div className="admin-login__card">
+          <p className="eyebrow">Acceso restringido</p>
+          <h1>Solo equipo</h1>
+          <p className="admin-login__sub">Tu cuenta es de socio del Club Cleofas y no tiene acceso al panel del negocio.</p>
+          <Link to="/cuenta" className="btn btn-primary">Ir a mi cuenta</Link>
+          <button className="admin__signout" onClick={signOut}>Cerrar sesión y entrar con otra cuenta</button>
+        </div>
+      </div>
+    )
+  }
 
   const correo = session?.user?.email || 'equipo@cleofas'
 

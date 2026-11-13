@@ -4,6 +4,10 @@ import {
   MAX_HORAS, precioPorHoras, iniciosPosibles, hhmm, ahoraMX, sumarDias, api,
 } from '../lib/reservas'
 import { NEGOCIO, horarioDe } from '../data/negocio'
+import { Link } from 'react-router-dom'
+import { useAuth } from '../lib/AuthContext'
+import { supabase } from '../lib/supabaseClient'
+import { conDescuento } from '../lib/socios'
 import FondoVideo from './FondoVideo'
 import './Booking.css'
 
@@ -58,8 +62,24 @@ export default function Booking() {
   )
 }
 
+// Socio con sesión iniciada: su nombre, correo y descuento de rango (el servidor lo vuelve a calcular).
+function useSocioReserva() {
+  const { session } = useAuth()
+  const [socio, setSocio] = useState(null)
+  useEffect(() => {
+    const uid = session?.user?.id
+    if (!uid || session.demo) { setSocio(null); return }
+    supabase.from('socios').select('nombre, email, telefono, rangos(nombre, desc_horas, color)').eq('user_id', uid).maybeSingle()
+      .then(({ data }) => setSocio(data ?? null), () => setSocio(null))
+  }, [session?.user?.id])
+  return { socio, token: session?.access_token }
+}
+
 function FormReserva() {
   const { estaciones } = useEstacionesPublicas()
+  const { socio, token } = useSocioReserva()
+  const pct = socio?.rangos?.desc_horas || 0
+  const precio = (h) => conDescuento(precioPorHoras(h), pct)
   const libres = estaciones.filter((e) => e.estado !== 'mantenimiento')
   const hoyLocal = useMemo(() => ahoraMX(), [])
   const [estacion, setEstacion] = useState('')
@@ -109,7 +129,7 @@ function FormReserva() {
     return [...mapa.values()].sort((a, b) => a.min - b.min)
   }, [validos, fecha])
 
-  const total = precioPorHoras(duracion)
+  const total = precio(duracion)
   const listo = estacion && inicio !== null && validos.includes(inicio)
 
   async function onSubmit(e) {
@@ -121,7 +141,7 @@ function FormReserva() {
     try {
       const { url } = await api('/api/checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(socio && token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({
           cliente: f.get('cliente'),
           email: f.get('email'),
@@ -138,19 +158,29 @@ function FormReserva() {
   }
 
   return (
-    <form className="booking__form" onSubmit={onSubmit}>
+    <form className="booking__form" onSubmit={onSubmit} key={socio ? 'socio' : 'invitado'}>
+      {socio ? (
+        <p className="booking__socio" style={{ '--rango': socio.rangos?.color || '#9FB0CC' }}>
+          Reservas como socio <strong>{socio.rangos?.nombre}</strong>
+          {pct > 0 ? <> · <b>−{pct}%</b> en tu reserva</> : ' · sumas puntos con esta reserva'}
+        </p>
+      ) : (
+        <p className="booking__socio booking__socio--invitado">
+          ¿Eres del Club Cleofas? <Link to="/cuenta/entrar">Inicia sesión</Link> para sumar puntos y usar tu descuento.
+        </p>
+      )}
       <label>
         Nombre
-        <input name="cliente" required maxLength={80} placeholder="¿A nombre de quién?" />
+        <input name="cliente" required maxLength={80} placeholder="¿A nombre de quién?" defaultValue={socio?.nombre ?? ''} />
       </label>
       <div className="booking__row">
         <label>
           Correo
-          <input type="email" name="email" required placeholder="Para tu comprobante" />
+          <input type="email" name="email" required placeholder="Para tu comprobante" defaultValue={socio?.email ?? ''} />
         </label>
         <label>
           Teléfono (opcional)
-          <input type="tel" name="telefono" placeholder="56 4625 3958" />
+          <input type="tel" name="telefono" placeholder="56 4625 3958" defaultValue={socio?.telefono ?? ''} />
         </label>
       </div>
       <p className="booking__hint">
@@ -182,7 +212,7 @@ function FormReserva() {
         Duración
         <select value={duracion} onChange={(e) => setDuracion(Number(e.target.value))}>
           {Array.from({ length: MAX_HORAS }, (_, i) => i + 1).map((h) => (
-            <option key={h} value={h}>{h} {h === 1 ? 'hora' : 'horas'} — ${precioPorHoras(h)} MXN</option>
+            <option key={h} value={h}>{h} {h === 1 ? 'hora' : 'horas'} — ${precio(h)} MXN{pct ? ` (antes $${precioPorHoras(h)})` : ''}</option>
           ))}
         </select>
       </label>

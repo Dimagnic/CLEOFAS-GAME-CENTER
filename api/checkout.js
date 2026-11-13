@@ -4,6 +4,22 @@ import {
 } from './_lib/comun.js'
 import { LEGAL } from '../src/data/negocio.js'
 
+// Si quien reserva es socio con sesión iniciada (manda su token), se aplica el descuento de su rango.
+// Si algo falla al revisarlo, se cobra el precio normal: nunca bloquea el pago.
+async function socioDe(req) {
+  const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim()
+  if (!token) return null
+  try {
+    const { data: u, error } = await db().auth.getUser(token)
+    if (error || !u?.user) return null
+    const { data: s } = await db().from('socios').select('user_id, rangos(nombre, desc_horas)').eq('user_id', u.user.id).maybeSingle()
+    return s ?? null
+  } catch (e) {
+    console.warn('No se pudo revisar el socio:', e.message)
+    return null
+  }
+}
+
 // POST /api/checkout  →  crea la reservación (apartada 31 min) y la sesión de pago de Stripe.
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Método no permitido' })
@@ -22,7 +38,11 @@ export default async function handler(req, res) {
     const dur = Number(b.duracion)
     const inicio = inicioMX(b.fecha, ini)
     const fin = new Date(inicio.getTime() + dur * 3600000)
-    const monto = precioPorHoras(dur) // el precio lo calcula el servidor, nunca el navegador
+    const precioBase = precioPorHoras(dur) // el precio lo calcula el servidor, nunca el navegador
+    const socio = await socioDe(req)
+    const pct = Math.min(50, Math.max(0, Number(socio?.rangos?.desc_horas) || 0))
+    const descuento = Math.round((precioBase * pct) / 100)
+    const monto = precioBase - descuento
     const expiraEn = new Date(ahora + CFG.HOLD_MIN * 60000)
 
     await limpiarVencidas(b.estacion)
@@ -53,6 +73,7 @@ export default async function handler(req, res) {
           monto,
           estado: 'pendiente_pago',
           expires_at: expiraEn.toISOString(),
+          ...(socio ? { socio_id: socio.user_id, descuento } : {}),
         })
         .select('id, folio')
         .single()
@@ -75,7 +96,7 @@ export default async function handler(req, res) {
             currency: 'mxn',
             unit_amount: Math.round(monto * 100),
             product_data: {
-              name: `Cleofas Game Center · ${b.estacion} · ${dur} h`,
+              name: `Cleofas Game Center · ${b.estacion} · ${dur} h${descuento ? ` · socio ${socio.rangos?.nombre ?? ''} -${pct}%` : ''}`,
               description: `${b.fecha} de ${hhmm(ini)} a ${hhmm(ini + dur * 60)} · Folio ${reserva.folio}`,
             },
           },

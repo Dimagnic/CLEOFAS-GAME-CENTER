@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { NEGOCIO, MAPA_LINK, horarioHoyTexto } from '../data/negocio'
+import { useAuth } from '../lib/AuthContext'
 import './Navbar.css'
 
 const LINKS = [
@@ -14,6 +15,8 @@ export default function Navbar() {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [activo, setActivo] = useState('')
+  const { session } = useAuth()
+  const conectado = Boolean(session && !session.demo)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -64,9 +67,9 @@ export default function Navbar() {
               <b>0{i + 1}</b>{l.label}
             </a>
           ))}
-          <Link to="/panel" onClick={cerrar} className="nav__panel" style={{ '--i': LINKS.length }} aria-label="Panel de control">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="1" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
-            <span>Panel</span>
+          <Link to={conectado ? '/cuenta' : '/cuenta/entrar'} onClick={cerrar} className="nav__panel" style={{ '--i': LINKS.length }} aria-label={conectado ? 'Mi cuenta' : 'Club Cleofas: entrar o crear cuenta'}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" /></svg>
+            <span>{conectado ? 'Mi cuenta' : 'Club'}</span>
           </Link>
           <a href="#reservar" onClick={cerrar} className="nav__cta btn btn-primary" style={{ '--i': LINKS.length }}>Reservar ahora</a>
         </nav>

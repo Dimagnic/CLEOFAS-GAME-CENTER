@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useStations, TARIFAS_SESION, TARIFA_RESERVA } from '../../lib/StationsStore'
+import { conDescuento } from '../../lib/socios'
+import SocioPicker from './SocioPicker'
 
 const MIN_TARIFA = { hora: 60, paq3: 180, paq5: 300 }
 const LLEGADA_ANTES_MIN = 60 // se puede registrar la llegada hasta 1 h antes de la reserva
@@ -41,6 +43,9 @@ export default function StationsControl() {
                 <p className="admin-station__cliente">{e.cliente}</p>
                 <p className="admin-station__timer">{e.restanteMin} min restantes</p>
                 {e.tarifaId === TARIFA_RESERVA && <p className="admin-station__reserva">Pagada en línea · no cobrar</p>}
+                {e.tarifaId !== TARIFA_RESERVA && e.precio != null && (
+                  <p className="admin-station__cobro">Cobrar ${e.precio}{e.socioId ? ` · socio${e.descuento ? ` (−$${e.descuento})` : ''}` : ''}</p>
+                )}
                 <button className="btn btn-ghost btn-sm" onClick={() => finalizarSesion(e.id)}>
                   {e.tarifaId === TARIFA_RESERVA ? 'Cerrar sesión' : 'Cerrar y cobrar'}
                 </button>
@@ -92,6 +97,8 @@ export default function StationsControl() {
 
 function IniciarSesionModal({ estacionId, reserva, onClose, onConfirm, onLlegada }) {
   const [tarifaId, setTarifaId] = useState(TARIFAS_SESION[0].id)
+  const [socio, setSocio] = useState(null)
+  const pct = socio?.rangos?.desc_horas || 0
 
   // ¿Hay una reserva en línea que se empalme con la sesión que estás por iniciar?
   const ahora = Date.now()
@@ -111,7 +118,7 @@ function IniciarSesionModal({ estacionId, reserva, onClose, onConfirm, onLlegada
         : `Esta sesión terminaría después de las ${hora(reserva.iniMs)}, cuando empieza la reserva en línea de ${nombreReserva}. ¿Iniciar de todos modos?`
       if (!window.confirm(aviso)) return
     }
-    onConfirm({ cliente: form.get('cliente'), tarifaId })
+    onConfirm({ cliente: String(form.get('cliente') || '').trim(), tarifaId, socio })
   }
 
   return (
@@ -134,15 +141,21 @@ function IniciarSesionModal({ estacionId, reserva, onClose, onConfirm, onLlegada
           </div>
         )}
         <p className="admin-modal__sub">{puedeLlegar ? 'O inicia una sesión normal en mostrador:' : null}</p>
+        <div className="admin-modal__campo">
+          <span>Socio del club (opcional)</span>
+          <SocioPicker value={socio} onChange={setSocio} />
+        </div>
         <label>
           Cliente
-          <input name="cliente" required placeholder="Nombre" />
+          <input name="cliente" required={!socio} placeholder={socio ? socio.nombre : 'Nombre'} key={socio?.user_id ?? 'sin-socio'} />
         </label>
         <label>
           Tarifa
           <select name="tarifa" value={tarifaId} onChange={(e) => setTarifaId(e.target.value)}>
             {TARIFAS_SESION.map((t) => (
-              <option key={t.id} value={t.id}>{t.nombre} — ${t.precio}{choca(t.id) ? ' · se empalma con la reserva' : ''}</option>
+              <option key={t.id} value={t.id}>
+                {t.nombre} — ${conDescuento(t.precio, pct)}{pct ? ` (antes $${t.precio})` : ''}{choca(t.id) ? ' · se empalma con la reserva' : ''}
+              </option>
             ))}
           </select>
         </label>

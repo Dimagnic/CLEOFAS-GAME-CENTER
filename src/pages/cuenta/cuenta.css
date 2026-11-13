@@ -1,0 +1,165 @@
+/* ===== Club Cleofas · área del socio ===== */
+
+/* --- acceso (login, registro, recuperar) --- */
+.cuenta-acceso { padding-block: var(--space-5); }
+.cuenta-acceso__card { width: 100%; max-width: 440px; }
+.cuenta-acceso__form { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-2); }
+.cuenta-acceso__form label { display: flex; flex-direction: column; gap: 6px; }
+.cuenta-acceso__form input:not([type="checkbox"]) {
+  width: 100%; padding: .9em 1em; color: var(--color-ink); border: 1px solid var(--color-line-strong);
+  background: rgba(3, 5, 10, .85); font: inherit; font-family: var(--font-body); text-transform: none; letter-spacing: 0;
+}
+.cuenta-acceso__form input:focus { outline: none; border-color: var(--color-accent-bright); box-shadow: 0 0 0 3px rgba(255, 42, 42, .18); }
+.cuenta-acceso__links { display: flex; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; font-size: var(--step--1); color: var(--color-ink-faint); }
+.cuenta-acceso__links a { color: var(--color-cyan); }
+.cuenta-acceso__links a:hover { text-decoration: underline; }
+.cuenta-acceso .btn-ghost { text-align: center; }
+
+.cuenta-check { flex-direction: row !important; align-items: flex-start; gap: 10px !important; text-transform: none !important; letter-spacing: 0 !important; font-family: var(--font-body) !important; font-size: var(--step--1) !important; color: var(--color-ink-muted); }
+.cuenta-check input { margin-top: 3px; accent-color: var(--color-accent); }
+.cuenta-check a, .cuenta-acceso__form a:not(.btn) { color: var(--color-cyan); }
+
+.cuenta-ok { padding: .7em 1em; background: rgba(43, 224, 139, .1); border: 1px solid rgba(43, 224, 139, .4); color: var(--color-ok); font-size: var(--step--1); }
+.cuenta-ok--banner { margin-bottom: var(--space-3); cursor: pointer; animation: aparece .5s var(--ease) both; }
+
+/* --- marco del panel del socio --- */
+.cuenta { min-height: 100vh; position: relative; isolation: isolate;
+  background: radial-gradient(900px 500px at 15% -10%, rgba(225, 11, 11, .16), transparent 60%),
+              radial-gradient(800px 500px at 100% 0%, rgba(46, 196, 255, .1), transparent 60%), var(--color-bg); }
+.cuenta > .particulas { z-index: -1; }
+.cuenta__wrap { width: min(100% - 2 * var(--space-3), 1080px); margin-inline: auto; }
+.cuenta__top { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(12px); background: rgba(3, 5, 10, .72); border-bottom: 1px solid var(--color-line); }
+.cuenta__top-row { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.cuenta__brand { display: flex; align-items: center; gap: .6rem; font-family: var(--font-display); font-weight: 700; letter-spacing: .08em; }
+.cuenta__brand img { border-radius: 6px; }
+.cuenta__brand em { font-style: normal; color: var(--color-accent-bright); }
+.cuenta__nav { display: flex; align-items: center; gap: var(--space-3); font-family: var(--font-mono); font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; }
+.cuenta__nav a, .cuenta__nav button { color: var(--color-ink-muted); }
+.cuenta__nav a:hover, .cuenta__nav button:hover { color: var(--color-accent-bright); }
+.cuenta__main { padding-block: var(--space-4) var(--space-6); display: flex; flex-direction: column; gap: var(--space-3); }
+
+.cuenta-muted { color: var(--color-ink-muted); font-size: var(--step--1); line-height: 1.55; }
+.cuenta-link { color: var(--color-cyan); font-size: var(--step--1); text-decoration: underline; text-underline-offset: 3px; }
+
+/* --- encabezado --- */
+.cuenta-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; animation: aparece .6s var(--ease) both; }
+.cuenta-hero h1 { font-size: var(--step-4); line-height: 1; text-transform: uppercase; }
+.cuenta-hero__stats { display: flex; gap: var(--space-2); }
+.cuenta-hero__stats div { min-width: 110px; padding: var(--space-2) var(--space-3); background: var(--color-bg-raised); border: 1px solid var(--color-line); display: flex; flex-direction: column; }
+.cuenta-hero__stats b { font-family: var(--font-display); font-size: var(--step-2); line-height: 1.1; }
+.cuenta-hero__stats span { font-family: var(--font-mono); font-size: .72rem; color: var(--color-ink-faint); text-transform: uppercase; letter-spacing: .1em; }
+
+.cuenta-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: var(--space-3); }
+.cuenta-grid > * { animation: aparece .6s var(--ease) both; }
+.cuenta-grid > *:nth-child(2) { animation-delay: .08s; }
+
+/* --- carnet de socio --- */
+.cuenta-carnet {
+  --rango: #9FB0CC;
+  position: relative; overflow: hidden; padding: var(--space-4); min-height: 260px; display: flex; flex-direction: column;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--rango) 26%, #0A1220) 0%, #070C16 55%, color-mix(in srgb, var(--rango) 14%, #03050A) 100%);
+  border: 1px solid color-mix(in srgb, var(--rango) 60%, transparent);
+  box-shadow: 0 0 60px color-mix(in srgb, var(--rango) 25%, transparent), inset 0 0 50px rgba(0, 0, 0, .35);
+  clip-path: polygon(0 0, calc(100% - 26px) 0, 100% 26px, 100% 100%, 26px 100%, 0 calc(100% - 26px));
+}
+.cuenta-carnet__brillo { position: absolute; inset: -40%; background: conic-gradient(from 0deg, transparent 0 70%, color-mix(in srgb, var(--rango) 35%, transparent) 80%, transparent 90%); animation: giro 9s linear infinite; opacity: .55; pointer-events: none; }
+@keyframes giro { to { transform: rotate(360deg); } }
+.cuenta-carnet > *:not(.cuenta-carnet__brillo) { position: relative; }
+.cuenta-carnet__top { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); }
+.cuenta-carnet__club { font-family: var(--font-mono); font-size: .72rem; letter-spacing: .25em; color: var(--color-ink-muted); }
+.cuenta-carnet__rango { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: .1em; padding: .25em .9em;
+  color: #03050A; background: var(--rango); box-shadow: 0 0 22px color-mix(in srgb, var(--rango) 70%, transparent); }
+.cuenta-carnet__nombre { font-family: var(--font-display); font-size: var(--step-2); font-weight: 700; margin-top: auto; padding-top: var(--space-3); text-transform: uppercase; letter-spacing: .04em; }
+.cuenta-carnet__codigo { font-family: var(--font-mono); letter-spacing: .3em; color: var(--color-ink-muted); }
+
+.cuenta-progreso { margin-top: var(--space-3); }
+.cuenta-progreso__txt { display: flex; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; font-size: var(--step--1); color: var(--color-ink-muted); margin-bottom: 8px; }
+.cuenta-progreso__barra { height: 10px; background: rgba(3, 5, 10, .7); border: 1px solid var(--color-line-strong); overflow: hidden; }
+.cuenta-progreso__barra i { display: block; height: 100%; background: linear-gradient(90deg, var(--rango), color-mix(in srgb, var(--rango) 50%, #fff));
+  box-shadow: 0 0 16px var(--rango); animation: llena 1.4s var(--ease) both; transform-origin: left; }
+@keyframes llena { from { transform: scaleX(0); } }
+
+/* --- QR --- */
+.cuenta-qr { display: flex; gap: var(--space-3); align-items: center; padding: var(--space-3); background: var(--color-bg-raised); border: 1px solid var(--color-line); }
+.cuenta-qr h2 { font-size: var(--step-1); margin-bottom: 6px; }
+.cuenta-qr__btn { flex: none; padding: 0; cursor: zoom-in; }
+.cuenta-qr__btn .cuenta-qr__img { width: 132px; }
+.cuenta-qr__img { background: #fff; padding: 8px; line-height: 0; }
+.cuenta-qr__img svg { width: 100%; height: auto; }
+
+/* --- paneles --- */
+.cuenta-panel { padding: var(--space-3); background: var(--color-bg-raised); border: 1px solid var(--color-line); animation: aparece .6s var(--ease) both; }
+.cuenta-panel h1 { font-size: var(--step-2); margin-bottom: var(--space-1); }
+.cuenta-panel h2 { font-size: var(--step-1); margin-bottom: var(--space-2); }
+.cuenta-panel__head { display: flex; justify-content: space-between; align-items: baseline; }
+.cuenta-panel .btn { margin-top: var(--space-2); }
+.cuenta-nota { margin-top: var(--space-2); font-size: .8rem; color: var(--color-ink-faint); }
+
+.cuenta-chips { display: flex; gap: var(--space-1); flex-wrap: wrap; margin-bottom: var(--space-2); }
+.cuenta-chip { padding: .4em .8em; border: 1px solid rgba(46, 196, 255, .35); background: rgba(46, 196, 255, .08); font-size: var(--step--1); color: var(--color-ink-muted); }
+.cuenta-chip b { color: var(--color-cyan); font-family: var(--font-display); font-size: 1.15em; }
+.cuenta-lista { display: flex; flex-direction: column; gap: 8px; }
+.cuenta-lista li { padding-left: 1.4em; position: relative; color: var(--color-ink-muted); font-size: var(--step--1); }
+.cuenta-lista li::before { content: ""; position: absolute; left: 0; top: .45em; width: .55em; height: .55em; background: var(--color-accent-bright); transform: rotate(45deg); box-shadow: 0 0 8px var(--color-accent-bright); }
+
+.cuenta-rangos { display: flex; flex-direction: column; gap: 8px; }
+.cuenta-rangos li { --rango: #9FB0CC; display: grid; grid-template-columns: 14px 1fr auto; gap: var(--space-2); align-items: center; padding: .7em .9em; border: 1px solid var(--color-line); opacity: .5; }
+.cuenta-rangos li.is-logrado { opacity: .85; }
+.cuenta-rangos li.is-actual { opacity: 1; border-color: var(--rango); box-shadow: 0 0 22px color-mix(in srgb, var(--rango) 25%, transparent); background: color-mix(in srgb, var(--rango) 8%, transparent); }
+.cuenta-rangos i { width: 12px; height: 12px; background: var(--rango); transform: rotate(45deg); box-shadow: 0 0 10px var(--rango); }
+.cuenta-rangos strong { display: block; font-family: var(--font-display); text-transform: uppercase; letter-spacing: .06em; }
+.cuenta-rangos span { font-size: .78rem; color: var(--color-ink-faint); }
+.cuenta-rangos em { font-style: normal; font-family: var(--font-mono); font-size: .72rem; color: var(--color-ink-muted); text-align: right; }
+
+/* --- historial --- */
+.cuenta-historial { display: flex; flex-direction: column; }
+.cuenta-historial__item { display: grid; grid-template-columns: 40px 1fr auto; gap: var(--space-2); align-items: center; padding: .8em 0; border-bottom: 1px solid var(--color-line); }
+.cuenta-historial__item:last-child { border-bottom: 0; }
+.cuenta-historial__ico { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--color-line-strong); color: var(--color-cyan); }
+.cuenta-historial__item--snack .cuenta-historial__ico { color: var(--color-warn); }
+.cuenta-historial__item--ajuste .cuenta-historial__ico { color: #B46BFF; }
+.cuenta-historial__item--reserva .cuenta-historial__ico { color: var(--color-ok); }
+.cuenta-historial__ico svg { width: 20px; height: 20px; }
+.cuenta-historial__item strong { display: block; font-weight: 500; font-size: var(--step--1); }
+.cuenta-historial__item div > span { font-size: .75rem; color: var(--color-ink-faint); }
+.cuenta-historial__num { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
+.cuenta-historial__num span { font-size: .78rem; color: var(--color-ink-faint); }
+.cuenta-historial__num b { font-family: var(--font-display); color: var(--color-ok); }
+.cuenta-historial__num b.neg { color: var(--color-busy); }
+
+/* --- formulario de datos --- */
+.cuenta-form { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+.cuenta-form label { display: flex; flex-direction: column; gap: 6px; font-size: .75rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--color-ink-faint); }
+.cuenta-form input { padding: .8em 1em; background: rgba(3, 5, 10, .8); border: 1px solid var(--color-line-strong); color: var(--color-ink); font: inherit; font-family: var(--font-body); text-transform: none; letter-spacing: 0; }
+.cuenta-form input:disabled { opacity: .55; }
+.cuenta-form .admin-login__error, .cuenta-form .cuenta-ok, .cuenta-form .btn { grid-column: 1 / -1; justify-self: start; }
+
+/* --- QR en grande --- */
+.cuenta-modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: var(--space-3); background: rgba(3, 5, 10, .88); backdrop-filter: blur(6px); animation: aparece .3s var(--ease) both; }
+.cuenta-modal__caja { width: min(360px, 100%); padding: var(--space-4); text-align: center; display: flex; flex-direction: column; gap: var(--space-2); align-items: center;
+  background: linear-gradient(160deg, #101c32, #070c16); border: 1px solid rgba(255, 42, 42, .45); }
+.cuenta-modal__caja .cuenta-qr__img { width: 100%; }
+
+/* --- carga --- */
+.cuenta-esqueleto { display: grid; gap: var(--space-3); }
+.cuenta-esqueleto div { height: 140px; background: linear-gradient(90deg, var(--color-bg-raised), var(--color-bg-raised-2), var(--color-bg-raised)); background-size: 200% 100%; animation: brilla 1.4s linear infinite; }
+.cuenta-esqueleto div:first-child { height: 90px; width: 50%; }
+@keyframes brilla { to { background-position: -200% 0; } }
+
+@media (max-width: 860px) {
+  .cuenta-grid { grid-template-columns: 1fr; }
+  .cuenta-hero__stats { width: 100%; }
+  .cuenta-hero__stats div { flex: 1; min-width: 0; padding: var(--space-2); }
+  .cuenta-form { grid-template-columns: 1fr; }
+  .cuenta-carnet { padding: var(--space-3); }
+  .cuenta-qr { flex-direction: column; text-align: center; }
+  .cuenta__nav { gap: var(--space-2); }
+  .cuenta-rangos li { grid-template-columns: 14px 1fr; }
+  .cuenta-rangos em { grid-column: 2; text-align: left; }
+  .cuenta-historial__item { grid-template-columns: 34px 1fr auto; gap: var(--space-1); }
+  .cuenta-historial__ico { width: 34px; height: 34px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cuenta-carnet__brillo, .cuenta-progreso__barra i, .cuenta-grid > *, .cuenta-panel, .cuenta-hero { animation: none !important; }
+}
+.cuenta-lista, .cuenta-rangos, .cuenta-historial { list-style: none; margin: 0; padding: 0; }

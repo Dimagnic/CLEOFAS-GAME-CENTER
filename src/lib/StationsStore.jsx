@@ -3,6 +3,7 @@ import { ESTACIONES, TARIFAS } from '../data/mockData'
 import { supabase, supabaseReady } from './supabaseClient'
 import { useAuth } from './AuthContext'
 import { minutosRestantes } from './estacionesPublicas'
+import { conDescuento } from './socios'
 
 const StationsContext = createContext(null)
 
@@ -14,6 +15,7 @@ export const TARIFA_RESERVA = 'reserva' // sesión de una reserva ya pagada en l
 const aFila = (r) => ({
   id: r.id, tipo: r.tipo, specs: r.specs, estado: r.estado,
   cliente: r.cliente ?? undefined, tarifaId: r.tarifa_id ?? undefined, precio: r.precio ?? undefined,
+  socioId: r.socio_id ?? null, descuento: Number(r.descuento || 0),
   finMs: r.fin_sesion ? new Date(r.fin_sesion).getTime() : null,
 })
 
@@ -53,7 +55,10 @@ export function StationsProvider({ children }) {
     setErrorSync('')
     setFilas(est.data.map(aFila))
     if (!cie.error) {
-      setCierresHoy(cie.data.map((c) => ({ estacion: c.estacion, cliente: c.cliente, precio: Number(c.precio), hora: c.hora })))
+      setCierresHoy(cie.data.map((c) => ({
+        estacion: c.estacion, cliente: c.cliente, precio: Number(c.precio), hora: c.hora,
+        tipo: c.tipo ?? 'sesion', detalle: c.detalle ?? '', socioId: c.socio_id ?? null, descuento: Number(c.descuento || 0),
+      })))
     }
     if (!res.error) {
       setReservas(res.data
@@ -103,13 +108,20 @@ export function StationsProvider({ children }) {
     if (error) { setErrorSync(error.message); cargar() }
   }
 
-  function iniciarSesion(id, { cliente, tarifaId }) {
+  // socio (opcional): se aplica su descuento en horas y la sesión le suma puntos al cerrarla.
+  function iniciarSesion(id, { cliente, tarifaId, socio }) {
     const tarifa = TARIFAS_SESION.find((t) => t.id === tarifaId)
     if (!tarifa) { setErrorSync('Esa tarifa no se puede usar para una sesión.'); return Promise.resolve() }
     const finMs = Date.now() + MINUTOS[tarifaId] * 60000
+    const precio = conDescuento(tarifa.precio, socio?.rangos?.desc_horas)
+    const descuento = tarifa.precio - precio
+    const nombre = cliente || socio?.nombre || 'Cliente'
     return guardar(id, {
-      local: { estado: 'sesion', cliente, tarifaId, precio: tarifa?.precio, finMs },
-      db: { estado: 'sesion', cliente, tarifa_id: tarifaId, precio: tarifa?.precio ?? 0, fin_sesion: new Date(finMs).toISOString() },
+      local: { estado: 'sesion', cliente: nombre, tarifaId, precio, finMs, socioId: socio?.user_id ?? null, descuento },
+      db: {
+        estado: 'sesion', cliente: nombre, tarifa_id: tarifaId, precio, fin_sesion: new Date(finMs).toISOString(),
+        ...(socio ? { socio_id: socio.user_id, descuento } : {}),
+      },
     })
   }
 
@@ -118,7 +130,7 @@ export function StationsProvider({ children }) {
     const cliente = `${reserva.cliente} · ${reserva.folio}`
     const finMs = reserva.finMs
     return guardar(id, {
-      local: { estado: 'sesion', cliente, tarifaId: TARIFA_RESERVA, precio: 0, finMs },
+      local: { estado: 'sesion', cliente, tarifaId: TARIFA_RESERVA, precio: 0, finMs, socioId: null, descuento: 0 },
       db: { estado: 'sesion', cliente, tarifa_id: TARIFA_RESERVA, precio: 0, fin_sesion: new Date(finMs).toISOString() },
     })
   }
@@ -130,6 +142,8 @@ export function StationsProvider({ children }) {
         estacion: id,
         cliente: est.tarifaId === TARIFA_RESERVA ? `${est.cliente} (pagado en línea)` : est.cliente,
         precio: est.tarifaId === TARIFA_RESERVA ? 0 : est.precio ?? 0,
+        // Los puntos del socio los suma la base de datos al guardar este cierre.
+        ...(est.socioId ? { socio_id: est.socioId, tipo: 'sesion', descuento: est.descuento || 0 } : {}),
         hora: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Mexico_City' }),
       }
       setCierresHoy((prev) => [cierre, ...prev])
@@ -139,9 +153,28 @@ export function StationsProvider({ children }) {
       }
     }
     return guardar(id, {
-      local: { estado: 'libre', cliente: undefined, tarifaId: undefined, precio: undefined, finMs: null },
-      db: { estado: 'libre', cliente: null, tarifa_id: null, precio: null, fin_sesion: null },
+      local: { estado: 'libre', cliente: undefined, tarifaId: undefined, precio: undefined, finMs: null, socioId: null, descuento: 0 },
+      db: { estado: 'libre', cliente: null, tarifa_id: null, precio: null, fin_sesion: null, ...(est?.socioId ? { socio_id: null, descuento: 0 } : {}) },
     })
+  }
+
+  // Venta de la tienda (snacks y bebidas). Va a la caja del día y, si hay socio, le suma puntos.
+  async function registrarVenta({ detalle, total, descuento, socio, cliente }) {
+    const cierre = {
+      estacion: 'TIENDA',
+      cliente: socio?.nombre || cliente || 'Mostrador',
+      precio: total,
+      hora: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Mexico_City' }),
+      tipo: 'snack',
+      detalle,
+      descuento,
+      socio_id: socio?.user_id ?? null,
+    }
+    if (enLinea) {
+      const { error } = await supabase.from('cierres').insert(cierre)
+      if (error) throw error
+    }
+    setCierresHoy((prev) => [{ ...cierre, socioId: cierre.socio_id }, ...prev])
   }
 
   function marcarMantenimiento(id) {
@@ -160,7 +193,7 @@ export function StationsProvider({ children }) {
 
   return (
     <StationsContext.Provider
-      value={{ estaciones, cierresHoy, errorSync, enLinea, reservas, reservasDe, iniciarSesion, iniciarReserva, finalizarSesion, marcarMantenimiento, liberar }}
+      value={{ estaciones, cierresHoy, errorSync, enLinea, reservas, reservasDe, iniciarSesion, iniciarReserva, finalizarSesion, registrarVenta, marcarMantenimiento, liberar }}
     >
       {children}
     </StationsContext.Provider>

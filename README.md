@@ -137,3 +137,27 @@ Variables en Vercel:
 - `EMAIL_COPIA` (opcional): correo del negocio que recibe copia de cada reservación pagada.
 
 El diseño del correo está en `api/_lib/plantillaCorreo.js`; la dirección, el teléfono y las redes salen de `src/data/negocio.js`.
+
+## Club Cleofas (socios y fidelización) — Fase 1
+
+Clientes crean su cuenta en `/cuenta/registro`, la activan por correo y ven en `/cuenta` su rango, puntos,
+progreso, QR de socio, beneficios e historial. Ganan **1 punto por cada $1** (reservas en línea pagadas,
+sesiones en mostrador y compras en la Tienda). El rango sube solo y su descuento se aplica en mostrador
+(al elegir al socio o escanear su QR) y en reservas en línea con sesión iniciada (el servidor lo recalcula).
+
+Panel: **Tienda** (vender snacks y administrar productos), **Socios** (registro, detalle, ajuste de puntos,
+rango manual, exportar CSV) y **Rangos** (niveles, puntos mínimos, descuentos y beneficios).
+
+Puesta en marcha:
+1. `npm install qrcode`
+2. Supabase → SQL Editor: ejecuta `supabase/migration-socios.sql` (se puede repetir).
+3. Supabase → Authentication → Sign In / Providers: activa *Allow new users to sign up* y *Confirm email*.
+   El panel sigue protegido: solo entra quien está en la tabla `equipo`.
+4. Supabase → Authentication → Emails → SMTP Settings: usa Resend (`smtp.resend.com`, puerto 465,
+   usuario `resend`, contraseña = tu API key de Resend, remitente de tu dominio verificado).
+5. Supabase → Authentication → Emails → Templates: pega `supabase/correos/confirmar-cuenta.html`
+   (Confirm signup) y `supabase/correos/recuperar-contrasena.html` (Reset password).
+6. Supabase → Authentication → URL Configuration: *Site URL* = tu dominio y en *Redirect URLs*
+   agrega `https://TU-DOMINIO/cuenta` y `https://TU-DOMINIO/cuenta/nueva-contrasena` (y `http://localhost:5173/**` para pruebas).
+
+Puntos: la base de datos los suma sola (triggers), así que no se pueden duplicar ni manipular desde el navegador.
