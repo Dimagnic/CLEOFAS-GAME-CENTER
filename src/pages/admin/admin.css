@@ -528,3 +528,18 @@
   .admin__nav { overflow-y: auto; min-height: 0; scrollbar-width: thin; }
   .admin__nav a { padding-top: .55em; padding-bottom: .55em; }
 }
+
+/* ===== PCs con Cleofas Agente ===== */
+.pc-led { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--color-ink-faint); margin-left: 6px; vertical-align: middle; }
+.pc-led.is-on { background: var(--color-ok); box-shadow: 0 0 6px var(--color-ok); }
+.pcs__estado { display: inline-flex; align-items: center; gap: 6px; }
+.pcs__estado .pc-led { margin-left: 0; }
+.pcs__sin { color: var(--color-ink-faint); }
+.pcs__acciones { display: flex; gap: var(--space-2); justify-content: flex-end; flex-wrap: wrap; }
+.pcs__ayuda { margin-top: var(--space-3); max-width: 720px; }
+.pcs__codigo { width: 100%; font-family: var(--font-mono); font-size: .75rem; word-break: break-all; background: var(--color-bg); color: var(--color-ink); border: 1px solid var(--color-line-strong); padding: 8px; resize: none; }
+.extender { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: var(--space-2) 0; }
+.extender button { display: flex; flex-direction: column; gap: 2px; padding: 12px; background: var(--color-bg); border: 1px solid var(--color-line-strong); color: var(--color-ink); cursor: pointer; text-align: left; font: inherit; }
+.extender button:hover { border-color: var(--color-accent); }
+.extender b { font-family: var(--font-display, inherit); }
+.extender span { font-size: .8rem; color: var(--color-ink-muted); }

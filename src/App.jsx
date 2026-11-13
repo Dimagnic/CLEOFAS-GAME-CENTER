@@ -16,6 +16,7 @@ import Publicaciones from './pages/admin/Publicaciones'
 import Automatizacion from './pages/admin/Automatizacion'
 import Inventario from './pages/admin/Inventario'
 import Hardware from './pages/admin/Hardware'
+import PCs from './pages/admin/PCs'
 import { Entrar, Registro, Recuperar, NuevaContrasena } from './pages/cuenta/Acceso'
 import MiCuenta from './pages/cuenta/MiCuenta'
 import Reservar from './pages/Reservar'
@@ -60,6 +61,7 @@ export default function App() {
               <Route path="automatizacion" element={<Automatizacion />} />
               <Route path="inventario" element={<Inventario />} />
               <Route path="hardware" element={<Hardware />} />
+              <Route path="pcs" element={<PCs />} />
             </Route>
           </Routes>
         </BrowserRouter>

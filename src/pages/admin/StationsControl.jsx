@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { useStations, TARIFAS_SESION, TARIFA_RESERVA } from '../../lib/StationsStore'
+import { useEffect, useState } from 'react'
+import { supabase } from '../../lib/supabaseClient'
+import { useStations, TARIFAS_SESION, TARIFA_RESERVA, MINUTOS } from '../../lib/StationsStore'
 import { conDescuento, descuentoCupon, canjearCupon } from '../../lib/socios'
 import SocioPicker from './SocioPicker'
 import CuponSelector from './CuponSelector'
@@ -11,7 +12,8 @@ const LLEGADA_ANTES_MIN = 60 // se puede registrar la llegada hasta 1 h antes de
 const hora = (ms) => new Date(ms).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Mexico_City' })
 
 export default function StationsControl() {
-  const { estaciones, errorSync, reservasDe, iniciarSesion, iniciarReserva, finalizarSesion, marcarMantenimiento, liberar } = useStations()
+  const { estaciones, errorSync, reservasDe, iniciarSesion, iniciarReserva, finalizarSesion, marcarMantenimiento, liberar, pcs, extenderSesion } = useStations()
+  const [extendiendo, setExtendiendo] = useState(null)
   const [abriendo, setAbriendo] = useState(null)
   const [cerrando, setCerrando] = useState(null)
   // Reserva en línea a la que pertenece la sesión (el folio va en el nombre del cliente)
@@ -36,6 +38,7 @@ export default function StationsControl() {
             <div className="admin-station__top">
               <strong>{e.id}</strong>
               <span>{e.tipo}</span>
+              {pcs?.[e.id] && <i className={`pc-led ${pcs[e.id].enLinea ? 'is-on' : ''}`} title={pcs[e.id].enLinea ? 'Programa de la PC conectado' : 'La PC no responde (apagada o sin internet)'} />}
             </div>
 
             {e.estado === 'libre' && (
@@ -53,8 +56,9 @@ export default function StationsControl() {
                 {e.tarifaId !== TARIFA_RESERVA && e.precio != null && (
                   <p className="admin-station__cobro">Cobrar ${e.precio}{e.socioId ? ` · socio${e.descuento ? ` (−$${e.descuento})` : ''}` : ''}</p>
                 )}
-                <button className="btn btn-ghost btn-sm" onClick={() => (e.tarifaId === TARIFA_RESERVA || !e.precio ? finalizarSesion(e.id) : setCerrando(e))}>
-                  {e.tarifaId === TARIFA_RESERVA ? 'Cerrar sesión' : 'Cerrar y cobrar'}
+                <button className="admin-link" onClick={() => setExtendiendo(e)}>+ Agregar tiempo</button>
+                <button className="btn btn-ghost btn-sm" onClick={() => (!e.precio ? finalizarSesion(e.id) : setCerrando(e))}>
+                  {!e.precio ? 'Cerrar sesión' : 'Cerrar y cobrar'}
                 </button>
               </div>
             )}
@@ -83,6 +87,11 @@ export default function StationsControl() {
           </div>
         ))}
       </div>
+
+      {extendiendo && (
+        <ModalExtender est={extendiendo} enLinea={pcs?.[extendiendo.id]?.enLinea} onCerrar={() => setExtendiendo(null)}
+          onElegir={(op) => { extenderSesion(extendiendo.id, op); setExtendiendo(null) }} />
+      )}
 
       {cerrando && (
         <div className="admin-modal__backdrop" onClick={() => setCerrando(null)}>
@@ -216,6 +225,37 @@ function IniciarSesionModal({ estacionId, reserva, onClose, onConfirm, onLlegada
           <button type="submit" className="btn btn-primary btn-sm" disabled={enviando}>{enviando ? 'Iniciando…' : 'Iniciar'}</button>
         </div>
       </form>
+    </div>
+  )
+}
+
+// Agregar tiempo: +15 min de cortesía o una tarifa cobrada (con el descuento de rango del socio, si hay)
+function ModalExtender({ est, enLinea, onCerrar, onElegir }) {
+  const [pct, setPct] = useState(0)
+  useEffect(() => {
+    if (!est.socioId) return
+    supabase.from('socios').select('rangos(desc_horas)').eq('user_id', est.socioId).maybeSingle()
+      .then(({ data }) => setPct(Number(data?.rangos?.desc_horas || 0)))
+  }, [est.socioId])
+  return (
+    <div className="admin-modal__backdrop" onClick={onCerrar}>
+      <div className="admin-modal" onClick={(ev) => ev.stopPropagation()}>
+        <h3>Agregar tiempo a {est.id}</h3>
+        <p className="socio-picker__nota">{est.cliente} · quedan {est.restanteMin ?? 0} min{enLinea ? ' · la PC se actualiza en segundos' : ''}</p>
+        <div className="extender">
+          <button onClick={() => onElegir({ minutos: 15 })}><b>+15 min</b><span>Cortesía · $0</span></button>
+          {TARIFAS_SESION.map((t) => {
+            const cargo = conDescuento(t.precio, pct)
+            return (
+              <button key={t.id} onClick={() => onElegir({ minutos: MINUTOS[t.id], cargo, descuento: t.precio - cargo })}>
+                <b>+{{ hora: '1 hora', paq3: '3 horas', paq5: '5 horas' }[t.id] ?? t.nombre}</b><span>${cargo}{pct ? ` (antes $${t.precio})` : ''}</span>
+              </button>
+            )
+          })}
+        </div>
+        <p className="socio-picker__nota">El cargo se suma a lo que se cobra al cerrar la sesión.</p>
+        <div className="admin-modal__actions"><button className="btn btn-ghost btn-sm" onClick={onCerrar}>Cancelar</button></div>
+      </div>
     </div>
   )
 }

@@ -246,3 +246,10 @@ Una sola tabla de **ventas** para el mostrador (POS), la tienda en línea del so
 3. `npm install` (agrega `jsqr` y `qrcode`), sube a GitHub y Vercel despliega.
 4. Panel → Inventario: captura productos (o escanéalos para darlos de alta) y su existencia inicial.
 5. Panel → Hardware: configura el ticket y prueba impresora, lector y cámara en el equipo del mostrador.
+
+## PCs · Control de tiempo (Cleofas Agente)
+
+- Migración: `supabase/migration-pcs.sql` (correr después de `migration-pos.sql`).
+- Panel → **PCs · Tiempo**: vincular cada PC (genera un código de un solo uso), ver si está en línea, enviar mensajes, desvincular.
+- Panel → **Estaciones → + Agregar tiempo**: +15 min de cortesía o tarifas cobradas; la PC se actualiza en segundos.
+- El programa de Windows está en el proyecto aparte `cleofas-agente` (ver su README).

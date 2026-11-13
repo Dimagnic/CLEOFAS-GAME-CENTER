@@ -7,7 +7,7 @@ import { conDescuento } from './socios'
 
 const StationsContext = createContext(null)
 
-const MINUTOS = { hora: 60, paq3: 180, paq5: 300 }
+export const MINUTOS = { hora: 60, paq3: 180, paq5: 300 }
 // Solo estas tarifas se cobran en mostrador por sesión. El pase mensual no es una sesión.
 export const TARIFAS_SESION = TARIFAS.filter((t) => MINUTOS[t.id])
 export const TARIFA_RESERVA = 'reserva' // sesión de una reserva ya pagada en línea
@@ -36,6 +36,7 @@ export function StationsProvider({ children }) {
   const [reservas, setReservas] = useState([]) // reservas en línea de los próximos 7 días
   const [, setTick] = useState(0)
   const [errorSync, setErrorSync] = useState('')
+  const [pcs, setPcs] = useState({}) // estacion → { enLinea, ultimo, version }
 
   const cargar = useCallback(async () => {
     if (!enLinea) return
@@ -61,6 +62,13 @@ export function StationsProvider({ children }) {
         tipo: c.tipo ?? 'sesion', detalle: c.detalle ?? '', socioId: c.socio_id ?? null, descuento: Number(c.descuento || 0),
         metodo: c.metodo_pago ?? 'efectivo',
       })))
+    }
+    // PCs con el programa Cleofas Agente (en línea si reportó en los últimos 20 s)
+    const disp = await supabase.from('dispositivos').select('estacion_id, ultimo_contacto, version').eq('activo', true)
+    if (!disp.error) {
+      setPcs(Object.fromEntries(disp.data.map((d) => [d.estacion_id, {
+        enLinea: Boolean(d.ultimo_contacto && Date.now() - new Date(d.ultimo_contacto).getTime() < 20000), ultimo: d.ultimo_contacto, version: d.version,
+      }])))
     }
     const vh = await supabase.from('ventas').select('folio, cliente, total, metodo_pago, origen, pagada_at, socio_id, venta_items(nombre, cantidad)')
       .eq('estado', 'pagada').gte('pagada_at', inicioDeHoyMX()).order('pagada_at', { ascending: false })
@@ -156,8 +164,8 @@ export function StationsProvider({ children }) {
     if (est) {
       const cierre = {
         estacion: id,
-        cliente: est.tarifaId === TARIFA_RESERVA ? `${est.cliente} (pagado en línea)` : est.cliente,
-        precio: est.tarifaId === TARIFA_RESERVA ? 0 : est.precio ?? 0,
+        cliente: est.tarifaId === TARIFA_RESERVA ? `${est.cliente} (pagado en línea${est.precio ? ' + tiempo extra' : ''})` : est.cliente,
+        precio: est.precio ?? 0, // en reservas pagadas solo queda lo extra que se agregó en mostrador
         // Los puntos del socio los suma la base de datos al guardar este cierre.
         ...(est.socioId ? { socio_id: est.socioId, tipo: 'sesion', descuento: est.descuento || 0 } : {}),
         ...(metodo !== 'efectivo' ? { metodo_pago: metodo } : {}),
@@ -194,6 +202,18 @@ export function StationsProvider({ children }) {
     setCierresHoy((prev) => [{ ...cierre, socioId: cierre.socio_id }, ...prev])
   }
 
+  // Agregar tiempo a una sesión en curso (la PC se desbloquea o actualiza su contador en segundos)
+  function extenderSesion(id, { minutos, cargo = 0, descuento = 0 }) {
+    const est = filas.find((e) => e.id === id)
+    if (!est || est.estado !== 'sesion') return Promise.resolve()
+    const finMs = Math.max(est.finMs ?? Date.now(), Date.now()) + minutos * 60000
+    const precio = Number(est.precio ?? 0) + cargo
+    return guardar(id, {
+      local: { finMs, precio, descuento: Number(est.descuento || 0) + descuento },
+      db: { fin_sesion: new Date(finMs).toISOString(), precio, ...(est.socioId ? { descuento: Number(est.descuento || 0) + descuento } : {}) },
+    })
+  }
+
   function marcarMantenimiento(id) {
     return guardar(id, {
       local: { estado: 'mantenimiento' },
@@ -210,7 +230,7 @@ export function StationsProvider({ children }) {
 
   return (
     <StationsContext.Provider
-      value={{ estaciones, cierresHoy, ventasHoy, errorSync, enLinea, reservas, reservasDe, iniciarSesion, iniciarReserva, finalizarSesion, registrarVenta, refrescar: cargar, marcarMantenimiento, liberar }}
+      value={{ estaciones, cierresHoy, ventasHoy, pcs, extenderSesion, errorSync, enLinea, reservas, reservasDe, iniciarSesion, iniciarReserva, finalizarSesion, registrarVenta, refrescar: cargar, marcarMantenimiento, liberar }}
     >
       {children}
     </StationsContext.Provider>
