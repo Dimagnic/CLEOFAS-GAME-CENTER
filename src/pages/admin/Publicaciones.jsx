@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase, supabaseReady } from '../../lib/supabaseClient'
-import { cargarRangos, TIPOS_PUB, fechaDia } from '../../lib/socios'
+import { cargarRangos, TIPOS_PUB, fechaDia, apiEquipo } from '../../lib/socios'
 import { TarjetaNovedad } from '../cuenta/Club'
 import '../cuenta/cuenta.css'
 
@@ -26,6 +26,23 @@ export default function Publicaciones() {
   const [rangos, setRangos] = useState([])
   const [error, setError] = useState('')
   const [editando, setEditando] = useState(null)
+  const [msg, setMsg] = useState('')
+  const [enviando, setEnviando] = useState(null)
+
+  async function enviarCorreo(p) {
+    const extra = p.notificado_at ? `\n\nOJO: ya se envió el ${fechaDia(p.notificado_at)} a ${p.notificados ?? 0} socios.` : ''
+    if (!window.confirm(`¿Enviar "${p.titulo}" por correo a los socios que pueden verla y aceptan correos?${extra}`)) return
+    setEnviando(p.id); setError(''); setMsg('')
+    try {
+      const r = await apiEquipo('/api/notificar', { publicacionId: p.id })
+      setMsg(`Enviada a ${r.enviados} de ${r.destinatarios} socios.${r.enviados < r.destinatarios ? ' Algunos no salieron: revisa el límite diario de tu plan de Resend.' : ''}`)
+      cargar()
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setEnviando(null)
+    }
+  }
 
   async function cargar() {
     const { data, error } = await supabase.from('publicaciones').select('*, rangos(nombre, color)').order('created_at', { ascending: false })
@@ -63,6 +80,7 @@ export default function Publicaciones() {
       </header>
 
       {error && <p className="admin-note admin-note--error">{error}</p>}
+      {msg && <p className="admin-note admin-note--ok">{msg}</p>}
       {!lista && !error && <p className="admin-note">Cargando…</p>}
       {lista?.length === 0 && <p className="admin-note">Aún no hay publicaciones. Crea la primera: por ejemplo, el próximo torneo o la promoción de la semana.</p>}
 
@@ -77,6 +95,9 @@ export default function Publicaciones() {
                 <button className="admin-link" onClick={() => setEditando(p)}>Editar</button>
                 <button className="admin-link" onClick={() => cambiar(p, { publicado: !p.publicado })}>{p.publicado ? 'Ocultar' : 'Publicar'}</button>
                 <button className="admin-link" onClick={() => cambiar(p, { destacado: !p.destacado })}>{p.destacado ? 'Quitar destacado' : 'Destacar'}</button>
+                <button className="admin-link" disabled={enviando === p.id || !p.publicado} onClick={() => enviarCorreo(p)} title={p.publicado ? '' : 'Publícala primero'}>
+                  {enviando === p.id ? 'Enviando…' : p.notificado_at ? `Reenviar por correo (enviada a ${p.notificados ?? 0})` : 'Enviar por correo'}
+                </button>
                 <button className="admin-link admin-link--peligro" onClick={() => borrar(p)}>Borrar</button>
               </div>
             </div>

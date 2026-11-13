@@ -175,3 +175,23 @@ fecha del evento, botón (ej. inscripción por WhatsApp), exclusivas por rango, 
 
 Puesta en marcha: en Supabase → SQL Editor ejecuta `supabase/migration-fase2.sql` (después de `migration-socios.sql`).
 Crea el bucket público `publicaciones` para subir imágenes; si tu proyecto no lo permite, pega enlaces de imagen.
+
+## Club Cleofas — Fase 3: automatización
+
+- **Cupones automáticos** (panel → Automatización): bienvenida al crear cuenta, premio al subir a cada rango
+  (una vez en la vida), cumpleaños (una vez al año; el socio captura su fecha una sola vez) y reactivación para
+  socios que no vienen en N días. Cada regla se enciende/apaga y define su cupón.
+- **Campañas de puntos**: x1.5, x2 o x3 por fechas, días de la semana y tipo de consumo. El socio ve el aviso en su cuenta.
+- **Correos**: avisos de cupones nuevos (uno por socio) y envío de publicaciones a los socios que pueden verlas.
+  El socio elige si recibe correos (registro y Mis datos).
+- **Cupones en reservas en línea**: el socio elige un cupón al reservar; si cubre el total (o deja menos de $10,
+  el mínimo de Stripe) la reserva se confirma sin pagar. El cupón se canjea al confirmarse el pago.
+- **Tarea diaria**: `vercel.json` programa `/api/cron` a las 9:00 (Puebla). También hay botón "Ejecutar ahora".
+
+Puesta en marcha:
+1. Supabase → SQL Editor: ejecuta `supabase/migration-fase3.sql` (después de las fases 1 y 2).
+2. Vercel → Settings → Environment Variables: agrega `CRON_SECRET` (cualquier texto largo y secreto) y
+   `SITE_URL=https://tu-dominio` (para los enlaces de los correos). Ya debes tener `RESEND_API_KEY` y `EMAIL_FROM`.
+3. Despliega. En Vercel → Settings → Cron Jobs verás la tarea diaria.
+
+Límites de Resend en plan gratis: 100 correos al día y 3,000 al mes. Si tu club crece, sube de plan.

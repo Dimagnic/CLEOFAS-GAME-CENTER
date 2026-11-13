@@ -112,7 +112,7 @@ export function MisCupones({ cupones }) {
       ) : (
         <>
           <div className="cupones">{disponibles.map((c) => <TarjetaCupon key={c.id} c={c} />)}</div>
-          <p className="cuenta-nota">Para usar un cupón, muestra tu QR de socio en mostrador y pide que lo apliquen.</p>
+          <p className="cuenta-nota">Úsalos al reservar en línea con tu sesión iniciada, o muestra tu QR de socio en mostrador y pide que los apliquen.</p>
         </>
       )}
       {verTodos && otros.length > 0 && <div className="cupones cupones--historial">{otros.map((c) => <TarjetaCupon key={c.id} c={c} />)}</div>}

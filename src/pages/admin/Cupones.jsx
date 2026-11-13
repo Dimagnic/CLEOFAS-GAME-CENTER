@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase, supabaseReady } from '../../lib/supabaseClient'
 import { useAuth } from '../../lib/AuthContext'
-import { cargarRangos, estadoCupon, textoCupon, fechaDia, pesos } from '../../lib/socios'
+import { cargarRangos, estadoCupon, textoCupon, fechaDia, pesos, apiEquipo } from '../../lib/socios'
 import SocioPicker from './SocioPicker'
 
 // Plantillas rápidas: un clic llena el formulario
@@ -26,6 +26,7 @@ export default function Cupones() {
   const [socio, setSocio] = useState(null)
   const [rangoId, setRangoId] = useState('')
   const [emitiendo, setEmitiendo] = useState(false)
+  const [avisar, setAvisar] = useState(true)
   const [q, setQ] = useState('')
   const [filtro, setFiltro] = useState('')
 
@@ -77,7 +78,16 @@ export default function Cupones() {
         const { error } = await supabase.from('cupones').insert(filas.slice(i, i + 500))
         if (error) throw error
       }
-      setMsg(`Cupón "${f.titulo.trim()}" emitido a ${resumen}. Ya lo ven en su cuenta.`)
+      let aviso = ''
+      if (avisar) {
+        try {
+          const r = await apiEquipo('/api/notificar', { cupones: true })
+          aviso = ` Se enviaron ${r.correos} correo${r.correos === 1 ? '' : 's'} de aviso.`
+        } catch (e2) {
+          aviso = ` (No se pudo avisar por correo ahora: ${e2.message} Se intentará en la tarea diaria.)`
+        }
+      }
+      setMsg(`Cupón "${f.titulo.trim()}" emitido a ${resumen}. Ya lo ven en su cuenta.${aviso}`)
       setSocio(null)
       cargar()
     } catch (err) {
@@ -173,6 +183,10 @@ export default function Cupones() {
               </select>
             )}
           </div>
+          <label className="emitir__avisar">
+            <input type="checkbox" checked={avisar} onChange={(e) => setAvisar(e.target.checked)} />
+            Avisar por correo ahora (si no, se avisa en la tarea diaria de la mañana)
+          </label>
           <button className="btn btn-primary" disabled={emitiendo}>{emitiendo ? 'Emitiendo…' : 'Emitir cupón'}</button>
         </form>
       </section>

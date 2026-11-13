@@ -119,3 +119,32 @@ export async function cargarClub(uid) {
   // Si la Fase 2 aún no está instalada en la base, simplemente no se muestran.
   return { cupones: cup.error ? [] : cup.data, publicaciones: pub.error ? [] : pub.data }
 }
+
+// ===================== Fase 3: automatización =====================
+
+// Campañas de puntos activas HOY (hora de Puebla) para mostrar "puntos x2" al socio
+export async function campanasDeHoy() {
+  const { data, error } = await supabase.from('campanas').select('*').eq('activo', true)
+  if (error) return []
+  const p = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Mexico_City', year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' }).formatToParts(new Date())
+  const g = (t) => p.find((x) => x.type === t)?.value
+  const hoy = `${g('year')}-${g('month')}-${g('day')}`
+  const dow = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(g('weekday'))
+  return data.filter((c) => (!c.desde || c.desde <= hoy) && (!c.hasta || c.hasta >= hoy) && (!c.dias_semana?.length || c.dias_semana.includes(dow)))
+}
+
+export const DIAS_SEMANA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+
+// Llama a una función del servidor (/api/...) con la sesión del equipo
+export async function apiEquipo(ruta, cuerpo) {
+  const { data } = await supabase.auth.getSession()
+  const r = await fetch(ruta, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token ?? ''}` },
+    body: JSON.stringify(cuerpo ?? {}),
+  })
+  let datos = null
+  try { datos = await r.json() } catch { /* sin JSON */ }
+  if (!r.ok) throw new Error(datos?.error || (r.status === 404 ? 'La función no existe aquí (usa el sitio publicado o "npx vercel dev").' : 'No se pudo conectar con el servidor.'))
+  return datos
+}
