@@ -7,6 +7,9 @@ import { minutosRestantes } from './estacionesPublicas'
 const StationsContext = createContext(null)
 
 const MINUTOS = { hora: 60, paq3: 180, paq5: 300 }
+// Solo estas tarifas se cobran en mostrador por sesión. El pase mensual no es una sesión.
+export const TARIFAS_SESION = TARIFAS.filter((t) => MINUTOS[t.id])
+export const TARIFA_RESERVA = 'reserva' // sesión de una reserva ya pagada en línea
 
 const aFila = (r) => ({
   id: r.id, tipo: r.tipo, specs: r.specs, estado: r.estado,
@@ -20,8 +23,8 @@ function inicioDeHoyMX() {
 }
 
 export function StationsProvider({ children }) {
-  const { session } = useAuth()
-  const enLinea = supabaseReady && Boolean(session && !session.demo)
+  const { session, esEquipo } = useAuth()
+  const enLinea = supabaseReady && Boolean(session && !session.demo && esEquipo)
 
   const [filas, setFilas] = useState(() =>
     ESTACIONES.map((e) => ({ ...e, finMs: e.estado === 'sesion' ? Date.now() + e.restanteMin * 60000 : null }))
@@ -101,11 +104,22 @@ export function StationsProvider({ children }) {
   }
 
   function iniciarSesion(id, { cliente, tarifaId }) {
-    const tarifa = TARIFAS.find((t) => t.id === tarifaId)
-    const finMs = Date.now() + (MINUTOS[tarifaId] ?? 60) * 60000
+    const tarifa = TARIFAS_SESION.find((t) => t.id === tarifaId)
+    if (!tarifa) { setErrorSync('Esa tarifa no se puede usar para una sesión.'); return Promise.resolve() }
+    const finMs = Date.now() + MINUTOS[tarifaId] * 60000
     return guardar(id, {
       local: { estado: 'sesion', cliente, tarifaId, precio: tarifa?.precio, finMs },
       db: { estado: 'sesion', cliente, tarifa_id: tarifaId, precio: tarifa?.precio ?? 0, fin_sesion: new Date(finMs).toISOString() },
+    })
+  }
+
+  // El cliente de una reserva en línea llegó: su sesión ya está pagada ($0 en caja) y termina a la hora reservada.
+  function iniciarReserva(id, reserva) {
+    const cliente = `${reserva.cliente} · ${reserva.folio}`
+    const finMs = reserva.finMs
+    return guardar(id, {
+      local: { estado: 'sesion', cliente, tarifaId: TARIFA_RESERVA, precio: 0, finMs },
+      db: { estado: 'sesion', cliente, tarifa_id: TARIFA_RESERVA, precio: 0, fin_sesion: new Date(finMs).toISOString() },
     })
   }
 
@@ -114,8 +128,8 @@ export function StationsProvider({ children }) {
     if (est) {
       const cierre = {
         estacion: id,
-        cliente: est.cliente,
-        precio: est.precio ?? 0,
+        cliente: est.tarifaId === TARIFA_RESERVA ? `${est.cliente} (pagado en línea)` : est.cliente,
+        precio: est.tarifaId === TARIFA_RESERVA ? 0 : est.precio ?? 0,
         hora: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Mexico_City' }),
       }
       setCierresHoy((prev) => [cierre, ...prev])
@@ -146,7 +160,7 @@ export function StationsProvider({ children }) {
 
   return (
     <StationsContext.Provider
-      value={{ estaciones, cierresHoy, errorSync, enLinea, reservas, reservasDe, iniciarSesion, finalizarSesion, marcarMantenimiento, liberar }}
+      value={{ estaciones, cierresHoy, errorSync, enLinea, reservas, reservasDe, iniciarSesion, iniciarReserva, finalizarSesion, marcarMantenimiento, liberar }}
     >
       {children}
     </StationsContext.Provider>

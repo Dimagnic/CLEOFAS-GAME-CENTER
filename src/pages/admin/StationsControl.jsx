@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { useStations } from '../../lib/StationsStore'
-import { TARIFAS } from '../../data/mockData'
+import { useStations, TARIFAS_SESION, TARIFA_RESERVA } from '../../lib/StationsStore'
 
 const MIN_TARIFA = { hora: 60, paq3: 180, paq5: 300 }
+const LLEGADA_ANTES_MIN = 60 // se puede registrar la llegada hasta 1 h antes de la reserva
 const hora = (ms) => new Date(ms).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Mexico_City' })
 
 export default function StationsControl() {
-  const { estaciones, errorSync, reservasDe, iniciarSesion, finalizarSesion, marcarMantenimiento, liberar } = useStations()
+  const { estaciones, errorSync, reservasDe, iniciarSesion, iniciarReserva, finalizarSesion, marcarMantenimiento, liberar } = useStations()
   const [abriendo, setAbriendo] = useState(null)
 
   return (
@@ -40,8 +40,9 @@ export default function StationsControl() {
               <div className="admin-station__session">
                 <p className="admin-station__cliente">{e.cliente}</p>
                 <p className="admin-station__timer">{e.restanteMin} min restantes</p>
+                {e.tarifaId === TARIFA_RESERVA && <p className="admin-station__reserva">Pagada en línea · no cobrar</p>}
                 <button className="btn btn-ghost btn-sm" onClick={() => finalizarSesion(e.id)}>
-                  Cerrar y cobrar
+                  {e.tarifaId === TARIFA_RESERVA ? 'Cerrar sesión' : 'Cerrar y cobrar'}
                 </button>
               </div>
             )}
@@ -79,14 +80,18 @@ export default function StationsControl() {
             iniciarSesion(abriendo, datos)
             setAbriendo(null)
           }}
+          onLlegada={(reserva) => {
+            iniciarReserva(abriendo, reserva)
+            setAbriendo(null)
+          }}
         />
       )}
     </div>
   )
 }
 
-function IniciarSesionModal({ estacionId, reserva, onClose, onConfirm }) {
-  const [tarifaId, setTarifaId] = useState(TARIFAS[0].id)
+function IniciarSesionModal({ estacionId, reserva, onClose, onConfirm, onLlegada }) {
+  const [tarifaId, setTarifaId] = useState(TARIFAS_SESION[0].id)
 
   // ¿Hay una reserva en línea que se empalme con la sesión que estás por iniciar?
   const ahora = Date.now()
@@ -94,6 +99,8 @@ function IniciarSesionModal({ estacionId, reserva, onClose, onConfirm }) {
   const minutosLibres = reserva && !enCurso ? Math.floor((reserva.iniMs - ahora) / 60000) : null
   const choca = (id) => reserva && (enCurso || ahora + (MIN_TARIFA[id] ?? 60) * 60000 > reserva.iniMs)
   const nombreReserva = reserva?.cliente.split(' ')[0]
+  // Solo reservas pagadas, en curso o que empiezan pronto, pueden registrarse como "llegó".
+  const puedeLlegar = reserva?.estado === 'confirmada' && reserva.iniMs - ahora <= LLEGADA_ANTES_MIN * 60000
 
   function onSubmit(e) {
     e.preventDefault()
@@ -118,6 +125,15 @@ function IniciarSesionModal({ estacionId, reserva, onClose, onConfirm }) {
               : `Reserva en línea de ${nombreReserva} a las ${hora(reserva.iniMs)} (en ${minutosLibres} min). Hasta entonces la estación está libre ${minutosLibres} min.`}
           </p>
         )}
+        {puedeLlegar && (
+          <div className="admin-modal__llegada">
+            <button type="button" className="btn btn-primary btn-sm" onClick={() => onLlegada(reserva)}>
+              Llegó {nombreReserva} · {reserva.folio}
+            </button>
+            <p>Ya pagó en línea: la sesión no se cobra y termina a las {hora(reserva.finMs)}.</p>
+          </div>
+        )}
+        <p className="admin-modal__sub">{puedeLlegar ? 'O inicia una sesión normal en mostrador:' : null}</p>
         <label>
           Cliente
           <input name="cliente" required placeholder="Nombre" />
@@ -125,7 +141,7 @@ function IniciarSesionModal({ estacionId, reserva, onClose, onConfirm }) {
         <label>
           Tarifa
           <select name="tarifa" value={tarifaId} onChange={(e) => setTarifaId(e.target.value)}>
-            {TARIFAS.map((t) => (
+            {TARIFAS_SESION.map((t) => (
               <option key={t.id} value={t.id}>{t.nombre} — ${t.precio}{choca(t.id) ? ' · se empalma con la reserva' : ''}</option>
             ))}
           </select>

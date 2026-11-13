@@ -33,10 +33,10 @@ function Reloj() {
 }
 
 export default function AdminLayout() {
-  const { session, loading, signOut } = useAuth()
+  const { session, esEquipo, loading, signOut } = useAuth()
 
   if (loading) return <div className="admin-loading">Cargando panel…</div>
-  if (!session) return <Navigate to="/panel/login" replace />
+  if (!session || !esEquipo) return <Navigate to="/panel/login" replace />
 
   const correo = session?.user?.email || 'equipo@cleofas'
 
