@@ -13,6 +13,9 @@ const ICONOS = {
   rangos: 'M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z',
   cupones: 'M3 7h18v4a2 2 0 0 0 0 4v4H3v-4a2 2 0 0 0 0-4zM10 7v12',
   publicaciones: 'M4 4h16v16H4zM8 8h8M8 12h8M8 16h5',
+  ventas: 'M4 19V9M10 19V5M16 19v-7M22 19H2',
+  inventario: 'M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10',
+  hardware: 'M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2M6 14h12v7H6z',
   automatizacion: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2',
 }
 
@@ -21,12 +24,15 @@ const NAV = [
   { to: '/panel/estaciones', label: 'Estaciones', ico: 'estaciones' },
   { to: '/panel/reservaciones', label: 'Reservaciones', ico: 'reservaciones' },
   { to: '/panel/caja', label: 'Caja del día', ico: 'caja' },
-  { to: '/panel/tienda', label: 'Tienda', ico: 'tienda' },
+  { to: '/panel/pos', label: 'POS · Tienda', ico: 'tienda' },
+  { to: '/panel/ventas', label: 'Ventas', ico: 'ventas' },
   { to: '/panel/socios', label: 'Socios', ico: 'socios' },
   { to: '/panel/rangos', label: 'Rangos', ico: 'rangos' },
   { to: '/panel/cupones', label: 'Cupones', ico: 'cupones' },
   { to: '/panel/publicaciones', label: 'Publicaciones', ico: 'publicaciones' },
   { to: '/panel/automatizacion', label: 'Automatización', ico: 'automatizacion' },
+  { to: '/panel/inventario', label: 'Inventario', ico: 'inventario' },
+  { to: '/panel/hardware', label: 'Hardware', ico: 'hardware' },
 ]
 
 function Reloj() {

@@ -208,3 +208,41 @@ cliente y en el **Resumen**. Botón **Cobrar $X** (efectivo: entra a la caja del
 Puntos: los productos pagados en línea suman al confirmarse el pago; los de efectivo, al cobrarlos.
 
 Puesta en marcha: ejecuta `supabase/migration-pedidos.sql` (después de las fases 1, 2 y 3).
+
+## POS, inventario, tienda del socio y ventas unificadas
+
+Una sola tabla de **ventas** para el mostrador (POS), la tienda en línea del socio y los productos agregados a una reserva.
+
+**Cliente**
+- `/reservar`: página independiente para reservar (desde "Mi cuenta" o el menú), con la tienda integrada.
+- `/cuenta/tienda`: catálogo con fotos, descripción, precio de socio y existencias en tiempo real; carrito;
+  pagar en línea (Stripe) o al recoger (efectivo, tarjeta o transferencia).
+- `/cuenta/pedidos`: pedidos con **QR** para identificarse en mostrador, estado en vivo, pagar en línea o cancelar.
+- Los productos pendientes de pago **no dan puntos**; se acreditan al confirmarse el pago (en línea o en mostrador).
+
+**Panel**
+- **POS · Tienda**: lector de códigos de barras, búsqueda, socio por QR (S-…), cupones, efectivo con cambio,
+  terminal y transferencia/QR con referencia, ticket térmico automático. Pestaña "Pedidos de clientes":
+  escanear el QR del pedido (V-…) o la reserva (CL-…) para cobrar y entregar.
+- **Ventas**: historial con filtros, detalle, reimpresión, cancelación/devolución (regresa existencias y resta puntos)
+  y **Reportes** (ventas por día, por método y origen, ticket promedio, utilidad y productos más vendidos).
+- **Inventario**: catálogo (nombre, descripción, categoría, precio, costo privado, código de barras, foto),
+  existencias y apartados, entradas/ajustes/mermas con historial, alertas de stock bajo y agotados,
+  opción de permitir o no vender sin existencias.
+- **Hardware**: configuración del ticket (58/80 mm) y pruebas de impresora, lector y cámara.
+- **Caja del día**: sesiones + ventas, separando efectivo, terminal, QR y en línea. "Cerrar y cobrar" pide el método.
+
+**Hardware compatible**
+- Lectores de códigos de barras y QR USB/Bluetooth en modo teclado (HID), configurados para enviar Enter al final.
+- Cámara de celular, tableta o webcam (QR en cualquier navegador; códigos de barras en Android/Mac/ChromeOS).
+- Impresoras térmicas de 58 u 80 mm instaladas en el equipo (Epson, Xprinter, 3nStar…). Para imprimir sin
+  ventana, abre Chrome/Edge con `--kiosk-printing`.
+
+**Puesta en marcha**
+1. Supabase → SQL Editor: ejecuta `supabase/migration-pos.sql`. **Siempre al final**: si vuelves a correr un SQL
+   anterior (socios, fase2, fase3, pedidos), corre después `migration-pos.sql` otra vez.
+2. Supabase → Database → Replication: confirma que `productos` y `ventas` estén en `supabase_realtime`
+   (el SQL las agrega; si no, actívalas ahí). Sin esto todo funciona, pero se actualiza cada 30–45 s en lugar de al instante.
+3. `npm install` (agrega `jsqr` y `qrcode`), sube a GitHub y Vercel despliega.
+4. Panel → Inventario: captura productos (o escanéalos para darlos de alta) y su existencia inicial.
+5. Panel → Hardware: configura el ticket y prueba impresora, lector y cámara en el equipo del mostrador.

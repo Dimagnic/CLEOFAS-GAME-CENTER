@@ -1,17 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
-import { supabase, supabaseReady } from '../lib/supabaseClient'
+import { useMemo, useState } from 'react'
+import { useCatalogo, disponible, etiquetaStock } from '../lib/catalogo'
 
-const pesos = (n) => `$${Number(n || 0).toLocaleString('es-MX', { maximumFractionDigits: 2 })}`
+export const pesos = (n) => `$${Number(n || 0).toLocaleString('es-MX', { maximumFractionDigits: 2 })}`
 
-// Productos a la venta (los lee cualquiera; los precios finales los recalcula el servidor)
+// Productos a la venta con existencias en tiempo real (los precios finales los recalcula el servidor)
 export function useProductosTienda() {
-  const [productos, setProductos] = useState([])
-  useEffect(() => {
-    if (!supabaseReady) return
-    supabase.from('productos').select('id, nombre, precio, categoria').eq('activo', true).order('categoria').order('orden').order('nombre')
-      .then(({ data }) => setProductos(data ?? []), () => setProductos([]))
-  }, [])
-  return productos
+  return useCatalogo() ?? []
 }
 
 // Calcula el pedido: líneas, subtotal, descuento de socio y total
@@ -33,7 +27,8 @@ export default function PedidoTienda({ productos, cantidades, setCantidades, pag
 
   if (!productos.length) return null
   const sumar = (id, n) => setCantidades((c) => {
-    const v = Math.max(0, Math.min(20, (c[id] ?? 0) + n))
+    const p = productos.find((x) => x.id === id)
+    const v = Math.max(0, Math.min(20, disponible(p), (c[id] ?? 0) + n))
     const nuevo = { ...c, [id]: v }
     if (!v) delete nuevo[id]
     return nuevo
@@ -58,16 +53,20 @@ export default function PedidoTienda({ productos, cantidades, setCantidades, pag
               <div className="pedido__lista">
                 {lista.map((p) => {
                   const cant = cantidades[p.id] ?? 0
+                  const et = etiquetaStock(p)
+                  const agotado = et?.[0] === 'agotado'
                   return (
-                    <div key={p.id} className={`pedido__item ${cant ? 'is-on' : ''}`}>
+                    <div key={p.id} className={`pedido__item ${cant ? 'is-on' : ''} ${agotado ? 'is-agotado' : ''}`}>
+                      {p.imagen_url && <img src={p.imagen_url} alt="" loading="lazy" />}
                       <div>
                         <strong>{p.nombre}</strong>
                         <span>{pesos(p.precio)}</span>
+                        {et && et[0] !== 'ok' && <em className={`pedido__stock pedido__stock--${et[0]}`}>{et[1]}</em>}
                       </div>
                       <div className="pedido__cant">
                         {cant > 0 && <button type="button" onClick={() => sumar(p.id, -1)} aria-label={`Quitar ${p.nombre}`}>−</button>}
                         {cant > 0 && <b>{cant}</b>}
-                        <button type="button" onClick={() => sumar(p.id, 1)} aria-label={`Agregar ${p.nombre}`}>+</button>
+                        <button type="button" onClick={() => sumar(p.id, 1)} disabled={agotado || cant >= disponible(p)} aria-label={`Agregar ${p.nombre}`}>+</button>
                       </div>
                     </div>
                   )
@@ -83,9 +82,9 @@ export default function PedidoTienda({ productos, cantidades, setCantidades, pag
                 <input type="radio" name="pagoProductos" checked={pago === 'en_linea'} onChange={() => setPago('en_linea')} />
                 <span><strong>Pagar ahora en línea</strong><small>Se cobran junto con tu reserva. Llegas y te los entregamos.</small></span>
               </label>
-              <label className={pago === 'efectivo' ? 'is-on' : ''}>
-                <input type="radio" name="pagoProductos" checked={pago === 'efectivo'} onChange={() => setPago('efectivo')} />
-                <span><strong>Pagar en efectivo en mi visita</strong><small>Los apartamos y los pagas en mostrador el día que vengas.</small></span>
+              <label className={pago === 'presencial' ? 'is-on' : ''}>
+                <input type="radio" name="pagoProductos" checked={pago === 'presencial'} onChange={() => setPago('presencial')} />
+                <span><strong>Pagar al llegar</strong><small>Los apartamos y los pagas en mostrador con efectivo, tarjeta o transferencia. Muestra el QR de tu pedido.</small></span>
               </label>
             </fieldset>
           )}

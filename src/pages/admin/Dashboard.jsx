@@ -19,7 +19,7 @@ export default function Dashboard() {
   const proximas = enLinea
     ? reservas.map((r) => ({
         folio: r.folio, cliente: r.cliente, estacion: r.estacion, cuando: cuando(r.iniMs), estado: r.estado,
-        pedido: r.snacks_pago ? `${(r.reserva_productos ?? []).map((p) => `${p.cantidad}× ${p.nombre}`).join(', ')} · ${estadoPedido(r)?.[1]}` : '—',
+        pedido: r.venta ? `${(r.venta.venta_items ?? []).map((p) => `${p.cantidad}× ${p.nombre}`).join(', ')} · ${estadoPedido(r)?.[1]}` : '—',
       }))
     : RESERVACIONES.map((r) => ({ ...r, cuando: `${r.fecha} · ${r.hora}` }))
 

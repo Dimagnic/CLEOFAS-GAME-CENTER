@@ -9,12 +9,18 @@ import Reservations from './pages/admin/Reservations'
 import Cashbox from './pages/admin/Cashbox'
 import Socios from './pages/admin/Socios'
 import Rangos from './pages/admin/Rangos'
-import Tienda from './pages/admin/Tienda'
+import POS from './pages/admin/POS'
+import Ventas from './pages/admin/Ventas'
 import Cupones from './pages/admin/Cupones'
 import Publicaciones from './pages/admin/Publicaciones'
 import Automatizacion from './pages/admin/Automatizacion'
+import Inventario from './pages/admin/Inventario'
+import Hardware from './pages/admin/Hardware'
 import { Entrar, Registro, Recuperar, NuevaContrasena } from './pages/cuenta/Acceso'
 import MiCuenta from './pages/cuenta/MiCuenta'
+import Reservar from './pages/Reservar'
+import TiendaSocio from './pages/cuenta/Tienda'
+import { MisPedidos, DetallePedido } from './pages/cuenta/Pedidos'
 import { AuthProvider } from './lib/AuthContext'
 import { StationsProvider } from './lib/StationsStore'
 import './styles/futuro.css'
@@ -29,7 +35,11 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/privacidad" element={<Privacidad />} />
             <Route path="/politica-de-cancelacion" element={<Cancelacion />} />
+            <Route path="/reservar" element={<Reservar />} />
             <Route path="/cuenta" element={<MiCuenta />} />
+            <Route path="/cuenta/tienda" element={<TiendaSocio />} />
+            <Route path="/cuenta/pedidos" element={<MisPedidos />} />
+            <Route path="/cuenta/pedidos/:folio" element={<DetallePedido />} />
             <Route path="/cuenta/entrar" element={<Entrar />} />
             <Route path="/cuenta/registro" element={<Registro />} />
             <Route path="/cuenta/recuperar" element={<Recuperar />} />
@@ -40,12 +50,16 @@ export default function App() {
               <Route path="estaciones" element={<StationsControl />} />
               <Route path="reservaciones" element={<Reservations />} />
               <Route path="caja" element={<Cashbox />} />
-              <Route path="tienda" element={<Tienda />} />
+              <Route path="tienda" element={<POS />} />
+              <Route path="pos" element={<POS />} />
+              <Route path="ventas" element={<Ventas />} />
               <Route path="socios" element={<Socios />} />
               <Route path="rangos" element={<Rangos />} />
               <Route path="cupones" element={<Cupones />} />
               <Route path="publicaciones" element={<Publicaciones />} />
               <Route path="automatizacion" element={<Automatizacion />} />
+              <Route path="inventario" element={<Inventario />} />
+              <Route path="hardware" element={<Hardware />} />
             </Route>
           </Routes>
         </BrowserRouter>

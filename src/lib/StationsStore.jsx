@@ -32,6 +32,7 @@ export function StationsProvider({ children }) {
     ESTACIONES.map((e) => ({ ...e, finMs: e.estado === 'sesion' ? Date.now() + e.restanteMin * 60000 : null }))
   )
   const [cierresHoy, setCierresHoy] = useState([])
+  const [ventasHoy, setVentasHoy] = useState([]) // ventas de tienda pagadas hoy (POS, pedidos, en línea)
   const [reservas, setReservas] = useState([]) // reservas en línea de los próximos 7 días
   const [, setTick] = useState(0)
   const [errorSync, setErrorSync] = useState('')
@@ -43,7 +44,7 @@ export function StationsProvider({ children }) {
       supabase.from('estaciones').select('*').order('id'),
       supabase.from('cierres').select('*').gte('created_at', inicioDeHoyMX()).order('created_at', { ascending: false }),
       supabase.from('reservaciones')
-        .select('id, folio, estacion, cliente, inicio, fin, estado, expires_at, snacks_pago, snacks_estado, snacks_total, snacks_descuento, snacks_entregado_at, reserva_productos(nombre, cantidad)')
+        .select('id, folio, estacion, cliente, inicio, fin, estado, expires_at, venta_id, venta:ventas!reservaciones_venta_id_fkey(*, venta_items(nombre, cantidad, precio_unit, subtotal, id))')
         .in('estado', ['confirmada', 'pendiente_pago'])
         .not('inicio', 'is', null)
         .gte('fin', new Date(ahora).toISOString())
@@ -58,8 +59,12 @@ export function StationsProvider({ children }) {
       setCierresHoy(cie.data.map((c) => ({
         estacion: c.estacion, cliente: c.cliente, precio: Number(c.precio), hora: c.hora,
         tipo: c.tipo ?? 'sesion', detalle: c.detalle ?? '', socioId: c.socio_id ?? null, descuento: Number(c.descuento || 0),
+        metodo: c.metodo_pago ?? 'efectivo',
       })))
     }
+    const vh = await supabase.from('ventas').select('folio, cliente, total, metodo_pago, origen, pagada_at, socio_id, venta_items(nombre, cantidad)')
+      .eq('estado', 'pagada').gte('pagada_at', inicioDeHoyMX()).order('pagada_at', { ascending: false })
+    if (!vh.error) setVentasHoy(vh.data)
     // Si la base aún no tiene pedidos de tienda (falta migration-pedidos.sql), se cargan las reservas sin ellos.
     if (res.error) {
       res = await supabase.from('reservaciones')
@@ -146,7 +151,7 @@ export function StationsProvider({ children }) {
     })
   }
 
-  async function finalizarSesion(id) {
+  async function finalizarSesion(id, metodo = 'efectivo') {
     const est = filas.find((e) => e.id === id)
     if (est) {
       const cierre = {
@@ -155,9 +160,10 @@ export function StationsProvider({ children }) {
         precio: est.tarifaId === TARIFA_RESERVA ? 0 : est.precio ?? 0,
         // Los puntos del socio los suma la base de datos al guardar este cierre.
         ...(est.socioId ? { socio_id: est.socioId, tipo: 'sesion', descuento: est.descuento || 0 } : {}),
+        ...(metodo !== 'efectivo' ? { metodo_pago: metodo } : {}),
         hora: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Mexico_City' }),
       }
-      setCierresHoy((prev) => [cierre, ...prev])
+      setCierresHoy((prev) => [{ ...cierre, metodo }, ...prev])
       if (enLinea) {
         const { error } = await supabase.from('cierres').insert(cierre)
         if (error) setErrorSync(error.message)
@@ -204,7 +210,7 @@ export function StationsProvider({ children }) {
 
   return (
     <StationsContext.Provider
-      value={{ estaciones, cierresHoy, errorSync, enLinea, reservas, reservasDe, iniciarSesion, iniciarReserva, finalizarSesion, registrarVenta, refrescar: cargar, marcarMantenimiento, liberar }}
+      value={{ estaciones, cierresHoy, ventasHoy, errorSync, enLinea, reservas, reservasDe, iniciarSesion, iniciarReserva, finalizarSesion, registrarVenta, refrescar: cargar, marcarMantenimiento, liberar }}
     >
       {children}
     </StationsContext.Provider>

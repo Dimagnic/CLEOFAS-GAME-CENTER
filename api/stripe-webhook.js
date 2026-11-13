@@ -28,6 +28,20 @@ export default async function handler(req, res) {
 
   try {
     const s = event.data.object
+    // Pedido de la tienda en línea (sin reserva)
+    const ventaId = s.metadata?.venta_id
+    if (ventaId) {
+      if ((event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') && s.payment_status === 'paid') {
+        const { error } = await db().rpc('confirmar_pago_en_linea', { p_venta: ventaId, p_referencia: String(s.payment_intent ?? '') })
+        if (error) console.warn(`Pago de pedido ${ventaId} no se pudo confirmar: ${error.message}. Revisar en Stripe.`)
+      } else if (event.type === 'checkout.session.expired' || event.type === 'checkout.session.async_payment_failed') {
+        const { data: v } = await db().from('ventas').select('estado, stripe_session_id').eq('id', ventaId).maybeSingle()
+        // Solo si sigue pendiente y es la misma sesión (el socio pudo haber pedido otro enlace)
+        if (v?.estado === 'pendiente' && v.stripe_session_id === s.id) {
+          await db().rpc('cancelar_venta_sistema', { p_venta: ventaId, p_motivo: 'El pago en línea no se completó' })
+        }
+      }
+    }
     const id = s.metadata?.reservacion_id
     if (id) {
       if (

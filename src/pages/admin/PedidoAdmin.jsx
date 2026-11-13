@@ -1,58 +1,34 @@
-import { useState } from 'react'
-import { supabase } from '../../lib/supabaseClient'
-import { useStations } from '../../lib/StationsStore'
+import { useEffect, useState } from 'react'
+import { estadoVenta, pesos, cargarVenta } from '../../lib/ventas'
+import DetalleVenta from './DetalleVenta'
+import { cargarConfigTicket } from './Hardware'
 
-const pesos = (n) => `$${Number(n || 0).toLocaleString('es-MX', { maximumFractionDigits: 2 })}`
-
-// Estado del pedido de tienda de una reserva: qué pidió, cómo paga y si ya se cobró/entregó.
+// Pedido de tienda ligado a una reserva (r.venta). Resumen + botón para cobrar/entregar en el detalle.
 export function estadoPedido(r) {
-  if (!r?.snacks_pago) return null
-  if (r.snacks_pago === 'en_linea') return r.snacks_estado === 'pagado' ? ['pagado', 'Pagado en línea'] : ['espera', 'Se paga con la reserva']
-  return r.snacks_estado === 'pagado' ? ['pagado', 'Cobrado en efectivo'] : ['efectivo', `Cobrar ${pesos(r.snacks_total)} en efectivo`]
+  return r?.venta ? estadoVenta(r.venta) : null
 }
 
-// r = fila de reservaciones con snacks_* y reserva_productos(nombre, cantidad)
 export default function PedidoAdmin({ r, onCambio, compacto = false }) {
-  const { refrescar } = useStations()
-  const [trabajando, setTrabajando] = useState(false)
-  const [error, setError] = useState('')
-  const estado = estadoPedido(r)
-  if (!estado) return compacto ? <span className="mono">—</span> : null
-  const productos = r.reserva_productos ?? []
-  const confirmada = r.estado === 'confirmada'
-
-  async function accion(fn, args, aviso) {
-    if (aviso && !window.confirm(aviso)) return
-    setTrabajando(true); setError('')
-    const { error } = await supabase.rpc(fn, args)
-    setTrabajando(false)
-    if (error) return setError(error.message)
-    refrescar?.()
-    onCambio?.()
-  }
-
+  const [abierta, setAbierta] = useState(null)
+  const [cfg, setCfg] = useState({})
+  useEffect(() => { if (abierta) cargarConfigTicket().then(setCfg) }, [abierta])
+  const v = r?.venta
+  if (!v) return compacto ? <span className="mono">—</span> : null
+  const [clase, texto] = estadoVenta(v)
   return (
-    <div className={`pedido-admin pedido-admin--${estado[0]} ${compacto ? 'pedido-admin--compacto' : ''}`}>
-      <ul>{productos.map((p, i) => <li key={i}><b>{p.cantidad}×</b> {p.nombre}</li>)}</ul>
+    <div className={`pedido-admin pedido-admin--${clase} ${compacto ? 'pedido-admin--compacto' : ''}`}>
+      <ul>{(v.venta_items ?? []).map((i, n) => <li key={i.id ?? n}><b>{i.cantidad}×</b> {i.nombre}</li>)}</ul>
       <div className="pedido-admin__estado">
-        <span className="pedido-admin__pill">{estado[1]}</span>
-        {r.snacks_entregado_at && <span className="pedido-admin__pill pedido-admin__pill--ok">Entregado</span>}
-        {r.snacks_descuento > 0 && <span className="mono">socio −{pesos(r.snacks_descuento)}</span>}
+        <span className="pedido-admin__pill">{texto}</span>
+        <span className="mono">{pesos(v.total)} · {v.folio}</span>
       </div>
-      {confirmada && (
-        <div className="pedido-admin__acciones">
-          {estado[0] === 'efectivo' && (
-            <button type="button" className="btn btn-primary btn-sm" disabled={trabajando}
-              onClick={() => accion('cobrar_pedido', { p_reserva: r.id }, `¿Cobraste ${pesos(r.snacks_total)} en efectivo a ${r.cliente}? Se registrará en la caja del día.`)}>
-              Cobrar {pesos(r.snacks_total)}
-            </button>
-          )}
-          {!r.snacks_entregado_at
-            ? <button type="button" className="admin-link" disabled={trabajando} onClick={() => accion('entregar_pedido', { p_reserva: r.id, p_entregado: true })}>Marcar entregado</button>
-            : <button type="button" className="admin-link" disabled={trabajando} onClick={() => accion('entregar_pedido', { p_reserva: r.id, p_entregado: false })}>Deshacer entrega</button>}
-        </div>
-      )}
-      {error && <p className="admin-note admin-note--error">{error}</p>}
+      <div className="pedido-admin__acciones">
+        <button type="button" className={v.estado === 'pendiente' ? 'btn btn-primary btn-sm' : 'admin-link'}
+          onClick={async () => setAbierta(await cargarVenta({ id: v.id }))}>
+          {v.estado === 'pendiente' ? `Cobrar ${pesos(v.total)}` : v.entrega === 'pendiente' && v.estado === 'pagada' ? 'Entregar' : 'Ver pedido'}
+        </button>
+      </div>
+      {abierta && <DetalleVenta venta={abierta} cfg={cfg} onCerrar={() => setAbierta(null)} onCambio={onCambio} />}
     </div>
   )
 }

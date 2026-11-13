@@ -14,8 +14,10 @@ export default async function handler(req, res) {
   try {
     const { data: reglas, error } = await db().rpc('procesar_automatizaciones', { p_origen: deVercel ? 'cron' : `panel: ${equipo.email}` })
     if (error) throw error
+    // Pedidos de la tienda que vencieron sin pagarse: se cancelan y liberan sus existencias
+    const { data: liberados } = await db().rpc('liberar_pedidos_vencidos')
     const correos = await avisarCuponesPendientes(sitioURL(req))
-    return json(res, 200, { ok: true, reglas, correos })
+    return json(res, 200, { ok: true, reglas, correos, pedidosLiberados: liberados ?? 0 })
   } catch (e) {
     console.error('cron', e)
     return json(res, 500, { error: e.message || 'Falló la automatización' })

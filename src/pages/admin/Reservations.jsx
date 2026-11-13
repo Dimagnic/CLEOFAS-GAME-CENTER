@@ -26,7 +26,7 @@ export default function Reservations() {
       .order('fecha', { ascending: false })
       .order('hora', { ascending: false })
       .limit(200)
-    let { data, error } = await consulta('*, reserva_productos(nombre, cantidad, precio_unit)')
+    let { data, error } = await consulta('*, venta:ventas!reservaciones_venta_id_fkey(*, venta_items(id, nombre, cantidad, precio_unit, subtotal))')
     if (error) ({ data, error } = await consulta('*')) // sin pedidos de tienda instalados
     if (error) setError(error.message)
     else setFilas(data)
@@ -46,10 +46,10 @@ export default function Reservations() {
 
   const [soloPedidos, setSoloPedidos] = useState(false)
   const pagadasHoy = (filas ?? []).filter((r) => r.estado === 'confirmada')
-  const porCobrar = pagadasHoy.filter((r) => r.snacks_pago === 'efectivo' && r.snacks_estado === 'pendiente')
-  const totalPorCobrar = porCobrar.reduce((s, r) => s + Number(r.snacks_total || 0), 0)
-  const conPedido = pagadasHoy.filter((r) => r.snacks_pago)
-  const visibles = (filas ?? []).filter((r) => !soloPedidos || r.snacks_pago)
+  const porCobrar = pagadasHoy.filter((r) => r.venta?.estado === 'pendiente')
+  const totalPorCobrar = porCobrar.reduce((s, r) => s + Number(r.venta.total || 0), 0)
+  const conPedido = pagadasHoy.filter((r) => r.venta)
+  const visibles = (filas ?? []).filter((r) => !soloPedidos || r.venta)
   const totalPagado = pagadasHoy.reduce((s, r) => s + Number(r.monto || 0), 0)
 
   return (
@@ -74,7 +74,7 @@ export default function Reservations() {
             <p className="admin-card__value">{conPedido.length}</p>
           </div>
           <div className="admin-card">
-            <p className="admin-card__label">Por cobrar en efectivo</p>
+            <p className="admin-card__label">Pedidos por cobrar en mostrador</p>
             <p className="admin-card__value">${totalPorCobrar}</p>
           </div>
         </div>

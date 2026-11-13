@@ -17,8 +17,18 @@ export async function enviarConfirmacion(reservacionId, sitio) {
   if (!r.email) return false
   const { data: est } = await db().from('estaciones').select('id, tipo, specs').eq('id', r.estacion).maybeSingle()
 
-  const { data: productos } = await db().from('reserva_productos').select('nombre, cantidad, precio_unit').eq('reservacion_id', r.id)
-  const { asunto, html, texto } = armarCorreo(r, est, sitio, productos ?? [])
+  // Pedido de tienda de la reserva (tabla de ventas; las reservas anteriores usaban reserva_productos)
+  let productos = []
+  if (r.venta_id) {
+    const { data } = await db().from('venta_items').select('nombre, cantidad, precio_unit').eq('venta_id', r.venta_id)
+    productos = data ?? []
+    const { data: v } = await db().from('ventas').select('folio, total, pago_preferido').eq('id', r.venta_id).maybeSingle()
+    if (v) Object.assign(r, { snacks_total: v.total, snacks_pago: v.pago_preferido === 'en_linea' ? 'en_linea' : 'efectivo', venta_folio: v.folio })
+  } else {
+    const { data } = await db().from('reserva_productos').select('nombre, cantidad, precio_unit').eq('reservacion_id', r.id)
+    productos = data ?? []
+  }
+  const { asunto, html, texto } = armarCorreo(r, est, sitio, productos)
   const copia = (process.env.EMAIL_COPIA || '').trim()
 
   const ctl = new AbortController()

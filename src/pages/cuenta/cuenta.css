@@ -245,3 +245,88 @@
 .mis-reservas__pedido b.ok { color: var(--color-ok); }
 .mis-reservas__pedido b.efectivo { color: var(--color-warn); }
 @media (max-width: 860px) { .mis-reservas__pedido { align-items: flex-start; text-align: left; } }
+
+/* ===== Marco ancho, Reservar, Tienda y Pedidos ===== */
+.cuenta__wrap--ancho { width: min(100% - 2 * var(--space-3), 1240px); }
+.cuenta__nav a.active { color: var(--color-ink); border-bottom: 2px solid var(--color-accent-bright); padding-bottom: 3px; }
+.reservar { display: grid; grid-template-columns: 1fr 1.4fr; gap: var(--space-4); align-items: start; }
+.reservar__info { position: sticky; top: 90px; display: flex; flex-direction: column; gap: var(--space-2); animation: aparece .6s var(--ease) both; }
+.reservar__info h1 { font-size: var(--step-4); line-height: 1; text-transform: uppercase; }
+.reservar__pasos { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.reservar__pasos li { display: flex; gap: 12px; align-items: center; font-size: var(--step--1); color: var(--color-ink-muted); }
+.reservar__pasos b { width: 30px; height: 30px; display: grid; place-items: center; flex: none; font-family: var(--font-display); border: 1px solid var(--color-accent-bright); color: var(--color-accent-bright); }
+.reservar__socio { display: flex; flex-direction: column; gap: 6px; padding: var(--space-2); border: 1px solid rgba(46, 196, 255, .35); background: rgba(46, 196, 255, .06); }
+.reservar__socio span { font-size: .85rem; color: var(--color-ink-muted); }
+.reservar__socio .btn { align-self: flex-start; }
+.reservar__card { padding: var(--space-3); background: var(--color-bg-raised); border: 1px solid var(--color-line-strong); animation: aparece .6s var(--ease) .08s both; }
+.reservar__tabs { margin-bottom: var(--space-2); }
+@media (max-width: 900px) { .reservar { grid-template-columns: 1fr; } .reservar__info { position: static; } }
+
+/* accesos rápidos en Mi cuenta */
+.cuenta-accesos { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); }
+.cuenta-accesos a { display: flex; flex-direction: column; gap: 4px; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-line-strong); background: var(--color-bg-raised); transition: border-color .2s, transform .2s var(--ease); }
+.cuenta-accesos a:hover { border-color: var(--color-accent-bright); transform: translateY(-2px); }
+.cuenta-accesos b { font-family: var(--font-display); text-transform: uppercase; letter-spacing: .06em; font-size: var(--step-1); }
+.cuenta-accesos span { font-size: .82rem; color: var(--color-ink-muted); }
+
+/* tienda del socio */
+.tienda-s__head { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--space-2); flex-wrap: wrap; }
+.tienda-s__head h1 { font-size: var(--step-4); line-height: 1; text-transform: uppercase; }
+.tienda-s__pct { color: var(--color-ok); }
+.tienda-s__carrito-btn { display: flex; align-items: center; gap: 10px; padding: .8em 1.2em; border: 1px solid var(--color-accent-bright); font-family: var(--font-display); text-transform: uppercase; letter-spacing: .08em; background: rgba(255, 42, 42, .08); }
+.tienda-s__carrito-btn:disabled { opacity: .5; border-color: var(--color-line-strong); background: none; }
+.tienda-s__carrito-btn b { min-width: 24px; height: 24px; display: grid; place-items: center; background: var(--color-accent); color: #fff; }
+.tienda-s__filtros { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+.tienda-s__filtros input { padding: .6em .9em; min-width: 220px; background: rgba(3, 5, 10, .8); border: 1px solid var(--color-line-strong); color: var(--color-ink); font: inherit; }
+.tienda-s__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--space-2); }
+.producto { display: flex; flex-direction: column; background: var(--color-bg-raised); border: 1px solid var(--color-line); overflow: hidden; transition: border-color .2s, transform .25s var(--ease), box-shadow .25s; animation: aparece .5s var(--ease) both; }
+.producto:hover { transform: translateY(-3px); border-color: var(--color-line-strong); box-shadow: 0 12px 30px rgba(0, 0, 0, .35); }
+.producto.is-en-carrito { border-color: var(--color-accent-bright); }
+.producto.is-agotado { opacity: .55; }
+.producto__foto { position: relative; aspect-ratio: 4 / 3; background: linear-gradient(135deg, var(--color-bg-raised-2), var(--color-bg)); display: grid; place-items: center; }
+.producto__foto img { width: 100%; height: 100%; object-fit: cover; }
+.producto__foto > span { font-family: var(--font-display); font-size: 3rem; color: var(--color-line-strong); }
+.producto__stock { position: absolute; top: 8px; right: 8px; font-style: normal; font-family: var(--font-mono); font-size: .66rem; text-transform: uppercase; letter-spacing: .06em; padding: .25em .55em; background: rgba(3, 5, 10, .85); border: 1px solid currentColor; }
+.producto__stock--ok { color: var(--color-ok); } .producto__stock--pocos { color: var(--color-warn); } .producto__stock--agotado { color: var(--color-busy); }
+.producto__cuerpo { padding: var(--space-2); display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.producto__cat { font-family: var(--font-mono); font-size: .66rem; text-transform: uppercase; letter-spacing: .12em; color: var(--color-ink-faint); }
+.producto h3 { font-size: var(--step-0); line-height: 1.2; }
+.producto__cuerpo p { font-size: .8rem; color: var(--color-ink-muted); line-height: 1.45; }
+.producto__pie { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: auto; padding-top: 6px; }
+.producto__precio { display: flex; flex-direction: column; }
+.producto__precio s { font-size: .75rem; color: var(--color-ink-faint); }
+.producto__precio b { font-family: var(--font-display); font-size: var(--step-1); color: var(--color-cyan); }
+.producto__cant { display: flex; align-items: center; gap: 8px; }
+.producto__cant button { width: 30px; height: 30px; border: 1px solid var(--color-line-strong); color: var(--color-ink); font-size: 1.05rem; }
+.producto__cant button:hover:not(:disabled) { border-color: var(--color-accent-bright); }
+.producto__cant button:disabled { opacity: .35; }
+.producto__cant b { min-width: 18px; text-align: center; font-family: var(--font-mono); }
+.tienda-s__flotante { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 40; padding: 1em 1.6em; background: var(--color-accent); color: #fff; font-family: var(--font-display); text-transform: uppercase; letter-spacing: .08em; box-shadow: 0 10px 30px rgba(225, 11, 11, .45); animation: aparece .4s var(--ease) both; }
+.tienda-s__panel { place-items: stretch end; padding: 0; }
+.tienda-s__cajon { width: min(440px, 100%); height: 100%; overflow: auto; padding: var(--space-3); background: linear-gradient(160deg, #101c32, #070c16); border-left: 1px solid rgba(255, 42, 42, .45); display: flex; flex-direction: column; gap: var(--space-2); animation: cajon .35s var(--ease) both; }
+@keyframes cajon { from { transform: translateX(40px); opacity: 0; } }
+.tienda-s__lineas { list-style: none; margin: 0; padding: 0; }
+.tienda-s__lineas li { display: grid; grid-template-columns: 1fr auto 70px; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--color-line); font-size: var(--step--1); }
+.tienda-s__lineas li > span:last-child { text-align: right; }
+.tienda-s__cupon { display: flex; flex-direction: column; gap: 6px; font-size: .75rem; font-family: var(--font-mono); text-transform: uppercase; color: var(--color-ink-faint); }
+.tienda-s__cupon select { padding: .6em; background: rgba(3, 5, 10, .8); border: 1px solid var(--color-line-strong); color: var(--color-ink); font: inherit; text-transform: none; }
+
+/* mis pedidos */
+.pedido-s { color: inherit; }
+.pedido-s:hover { border-color: var(--color-accent-bright); }
+.pedido-s--pendiente, .pedido-s--espera { border-left-color: var(--color-warn); }
+.pedido-s--cancelada, .pedido-s--vencida { border-left-color: var(--color-busy); opacity: .7; }
+.mis-reservas__pedido b.mal { color: var(--color-busy); }
+.pedido-det { display: grid; grid-template-columns: 320px 1fr; gap: var(--space-3); align-items: start; }
+.pedido-det__qr { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); padding: var(--space-3); text-align: center; background: var(--color-bg-raised); border: 1px solid var(--color-warn); }
+.pedido-det__qr--pagada { border-color: var(--color-cyan); } .pedido-det__qr--entregada { border-color: var(--color-ok); } .pedido-det__qr--cancelada, .pedido-det__qr--vencida { border-color: var(--color-busy); }
+.pedido-det__qr .cuenta-qr__img { width: 100%; max-width: 240px; }
+.pedido-det__qr code { font-family: var(--font-mono); font-size: 1.3rem; letter-spacing: .25em; color: var(--color-cyan); }
+.pedido-det__estado { font-family: var(--font-display); text-transform: uppercase; letter-spacing: .08em; font-size: var(--step-1); }
+.pedido-det__acciones { display: flex; gap: var(--space-2); align-items: center; margin-top: var(--space-2); flex-wrap: wrap; }
+@media (max-width: 860px) {
+  .cuenta-accesos { grid-template-columns: 1fr; }
+  .pedido-det { grid-template-columns: 1fr; }
+  .cuenta__nav { gap: 10px; font-size: .7rem; flex-wrap: wrap; justify-content: flex-end; }
+  .cuenta__top-row { height: auto; min-height: 64px; padding: 8px 0; }
+}

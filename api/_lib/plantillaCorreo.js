@@ -34,8 +34,9 @@ export function armarCorreo(r, est, sitio, productos = []) {
   ]
   if (productos.length) {
     filas.push(['Tu pedido de tienda', productos.map((p) => `${p.cantidad}× ${p.nombre}`).join(', ')])
+    if (r.venta_folio) filas.push(['Folio del pedido', `${r.venta_folio} (muéstralo en mostrador)`])
     filas.push(r.snacks_pago === 'efectivo'
-      ? ['Pagas al llegar', `$${Number(r.snacks_total).toLocaleString('es-MX')} MXN en efectivo`]
+      ? ['Pagas al llegar', `$${Number(r.snacks_total).toLocaleString('es-MX')} MXN (efectivo, tarjeta o transferencia)`]
       : ['Pedido', `Pagado en línea ($${Number(r.snacks_total).toLocaleString('es-MX')} MXN incluido arriba)`])
   }
 

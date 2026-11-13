@@ -165,3 +165,9 @@
 .booking__cuenta-total dt, .booking__cuenta-total dd { font-family: var(--font-display); font-size: 1.15rem; color: var(--color-ink) !important; text-transform: uppercase; }
 .booking__cuenta-efectivo dt, .booking__cuenta-efectivo dd { color: var(--color-warn) !important; font-weight: 600; }
 @media (max-width: 720px) { .pedido__pago { grid-template-columns: 1fr; } }
+.pedido__item img { width: 42px; height: 42px; object-fit: cover; flex: none; border: 1px solid var(--color-line); }
+.pedido__item > div:nth-child(2), .pedido__item > div:first-child:not(.pedido__cant) { flex: 1; min-width: 0; }
+.pedido__item.is-agotado { opacity: .45; }
+.pedido__stock { display: block; font-style: normal; font-family: var(--font-mono); font-size: .66rem; text-transform: uppercase; letter-spacing: .06em; }
+.pedido__stock--pocos { color: var(--color-warn); } .pedido__stock--agotado { color: var(--color-busy); }
+.pedido__cant button:disabled { opacity: .35; cursor: not-allowed; }

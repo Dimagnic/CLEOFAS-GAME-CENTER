@@ -4,6 +4,7 @@ import { conDescuento, descuentoCupon, canjearCupon } from '../../lib/socios'
 import SocioPicker from './SocioPicker'
 import CuponSelector from './CuponSelector'
 import PedidoAdmin from './PedidoAdmin'
+import { METODOS } from '../../lib/ventas'
 
 const MIN_TARIFA = { hora: 60, paq3: 180, paq5: 300 }
 const LLEGADA_ANTES_MIN = 60 // se puede registrar la llegada hasta 1 h antes de la reserva
@@ -12,6 +13,7 @@ const hora = (ms) => new Date(ms).toLocaleTimeString('es-MX', { hour: '2-digit',
 export default function StationsControl() {
   const { estaciones, errorSync, reservasDe, iniciarSesion, iniciarReserva, finalizarSesion, marcarMantenimiento, liberar } = useStations()
   const [abriendo, setAbriendo] = useState(null)
+  const [cerrando, setCerrando] = useState(null)
   // Reserva en línea a la que pertenece la sesión (el folio va en el nombre del cliente)
   const reservaEnCurso = (e) => reservasDe(e.id).find((r) => String(e.cliente ?? '').includes(r.folio))
 
@@ -47,11 +49,11 @@ export default function StationsControl() {
                 <p className="admin-station__cliente">{e.cliente}</p>
                 <p className="admin-station__timer">{e.restanteMin} min restantes</p>
                 {e.tarifaId === TARIFA_RESERVA && <p className="admin-station__reserva">Pagada en línea · no cobrar</p>}
-                {e.tarifaId === TARIFA_RESERVA && reservaEnCurso(e)?.snacks_pago && <PedidoAdmin r={reservaEnCurso(e)} compacto />}
+                {e.tarifaId === TARIFA_RESERVA && reservaEnCurso(e)?.venta && <PedidoAdmin r={reservaEnCurso(e)} compacto />}
                 {e.tarifaId !== TARIFA_RESERVA && e.precio != null && (
                   <p className="admin-station__cobro">Cobrar ${e.precio}{e.socioId ? ` · socio${e.descuento ? ` (−$${e.descuento})` : ''}` : ''}</p>
                 )}
-                <button className="btn btn-ghost btn-sm" onClick={() => finalizarSesion(e.id)}>
+                <button className="btn btn-ghost btn-sm" onClick={() => (e.tarifaId === TARIFA_RESERVA || !e.precio ? finalizarSesion(e.id) : setCerrando(e))}>
                   {e.tarifaId === TARIFA_RESERVA ? 'Cerrar sesión' : 'Cerrar y cobrar'}
                 </button>
               </div>
@@ -69,7 +71,7 @@ export default function StationsControl() {
             {reservasDe(e.id)[0] && (
               <p className="admin-station__reserva">
                 Reserva en línea: {hora(reservasDe(e.id)[0].iniMs)}–{hora(reservasDe(e.id)[0].finMs)} · {reservasDe(e.id)[0].cliente.split(' ')[0]}
-                {reservasDe(e.id)[0].snacks_pago && ` · 🛒 ${(reservasDe(e.id)[0].reserva_productos ?? []).reduce((s, p) => s + p.cantidad, 0)} productos`}
+                {reservasDe(e.id)[0].venta && ` · 🛒 ${(reservasDe(e.id)[0].venta.venta_items ?? []).reduce((s, p) => s + p.cantidad, 0)} productos`}
               </p>
             )}
 
@@ -81,6 +83,22 @@ export default function StationsControl() {
           </div>
         ))}
       </div>
+
+      {cerrando && (
+        <div className="admin-modal__backdrop" onClick={() => setCerrando(null)}>
+          <div className="admin-modal" onClick={(ev) => ev.stopPropagation()}>
+            <h3>Cobrar sesión de {cerrando.id}</h3>
+            <p className="pos__hecha-total">${cerrando.precio}</p>
+            <p className="socio-picker__nota">{cerrando.cliente}{cerrando.socioId ? ' · socio (suma puntos al cobrar)' : ''}</p>
+            <div className="cobro__metodos">
+              {['efectivo', 'terminal', 'qr'].map((m) => (
+                <button key={m} type="button" onClick={() => { finalizarSesion(cerrando.id, m); setCerrando(null) }}>{METODOS[m].etiqueta}</button>
+              ))}
+            </div>
+            <div className="admin-modal__actions"><button className="btn btn-ghost btn-sm" onClick={() => setCerrando(null)}>Cancelar</button></div>
+          </div>
+        </div>
+      )}
 
       {abriendo && (
         <IniciarSesionModal
@@ -160,7 +178,7 @@ function IniciarSesionModal({ estacionId, reserva, onClose, onConfirm, onLlegada
             <p>Ya pagó en línea: la sesión no se cobra y termina a las {hora(reserva.finMs)}.</p>
           </div>
         )}
-        {reserva?.snacks_pago && (
+        {reserva?.venta && (
           <div className="admin-modal__campo">
             <span>Pedido de tienda de {nombreReserva}</span>
             <PedidoAdmin r={reserva} />

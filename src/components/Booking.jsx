@@ -78,7 +78,7 @@ function useSocioReserva() {
   return { socio, cupones, token: session?.access_token }
 }
 
-function FormReserva() {
+export function FormReserva({ volver = '/' }) {
   const { estaciones } = useEstacionesPublicas()
   const { socio, cupones, token } = useSocioReserva()
   const [cuponId, setCuponId] = useState('')
@@ -140,7 +140,7 @@ function FormReserva() {
   const [pagoProductos, setPagoProductos] = useState(null)
   const pedido = calcularPedido(productosTienda, cantidades, socio?.rangos?.desc_snacks || 0)
   const productosEnLinea = pedido.piezas && pagoProductos === 'en_linea' ? pedido.total : 0
-  const productosEfectivo = pedido.piezas && pagoProductos === 'efectivo' ? pedido.total : 0
+  const productosEfectivo = pedido.piezas && pagoProductos === 'presencial' ? pedido.total : 0
 
   const conRango = precio(duracion)
   let horasTotal = conRango - descuentoCupon(cupon, conRango, 'horas')
@@ -166,6 +166,7 @@ function FormReserva() {
           telefono: f.get('telefono'),
           estacion, fecha, inicioMin: inicio, duracion, aceptaPoliticas: acepta,
           ...(cupon ? { cuponId: cupon.id } : {}),
+          volver,
           ...(pedido.piezas ? { productos: pedido.lineas.map((l) => ({ id: l.id, cantidad: l.cantidad })), pagoProductos } : {}),
         }),
       })
@@ -289,12 +290,12 @@ function FormReserva() {
           </div>
           {pedido.piezas > 0 && (
             <div>
-              <dt>Productos ({pedido.piezas}){pedido.descuento ? ` · −$${pedido.descuento} socio` : ''} · {pagoProductos === 'en_linea' ? 'pago en línea' : pagoProductos === 'efectivo' ? 'pago en efectivo' : 'elige cómo pagar'}</dt>
+              <dt>Productos ({pedido.piezas}){pedido.descuento ? ` · −$${pedido.descuento} socio` : ''} · {pagoProductos === 'en_linea' ? 'pago en línea' : pagoProductos === 'presencial' ? 'pago al llegar' : 'elige cómo pagar'}</dt>
               <dd>${pedido.total}</dd>
             </div>
           )}
           <div className="booking__cuenta-total"><dt>Pagas ahora en línea</dt><dd>${total} MXN</dd></div>
-          {productosEfectivo > 0 && <div className="booking__cuenta-efectivo"><dt>Pagas en efectivo al llegar</dt><dd>${productosEfectivo} MXN</dd></div>}
+          {productosEfectivo > 0 && <div className="booking__cuenta-efectivo"><dt>Pagas al llegar (efectivo, tarjeta o transferencia)</dt><dd>${productosEfectivo} MXN</dd></div>}
         </dl>
       )}
       {faltaPago && <p className="booking__error">Elige cómo quieres pagar tus productos antes de confirmar.</p>}
@@ -315,7 +316,7 @@ function FormReserva() {
           : !listo ? 'Elige estación y hora'
           : faltaPago ? 'Elige cómo pagar tus productos'
           : !acepta ? 'Acepta las políticas para continuar'
-          : total === 0 ? (productosEfectivo ? `Confirmar reserva · $${productosEfectivo} en tu visita` : 'Reservar gratis con mi cupón')
+          : total === 0 ? (productosEfectivo ? `Confirmar reserva · $${productosEfectivo} al llegar` : 'Reservar gratis con mi cupón')
           : `Pagar $${total} MXN y reservar`}
       </button>
       <p className="booking__hint">
@@ -327,7 +328,7 @@ function FormReserva() {
   )
 }
 
-function Retorno({ retorno, onCerrar }) {
+export function Retorno({ retorno, onCerrar }) {
   const [res, setRes] = useState(null)
   const [error, setError] = useState('')
 
@@ -402,7 +403,8 @@ function Retorno({ retorno, onCerrar }) {
         {res.pedido && (
           <>
             <div><dt>Tu pedido</dt><dd>{res.pedido.productos.map((p) => `${p.cantidad}× ${p.nombre}`).join(', ')}</dd></div>
-            <div><dt>Productos</dt><dd>{res.pedido.pago === 'efectivo' ? `$${res.pedido.total} en efectivo al llegar` : 'Pagados en línea'}</dd></div>
+            <div><dt>Productos</dt><dd>{res.pedido.pago === 'efectivo' ? `$${res.pedido.total} al llegar (efectivo, tarjeta o transferencia)` : 'Pagados en línea'}</dd></div>
+            {res.pedido.folio && <div><dt>Folio del pedido</dt><dd className="mono">{res.pedido.folio}</dd></div>}
           </>
         )}
       </dl>
@@ -413,7 +415,7 @@ function Retorno({ retorno, onCerrar }) {
   )
 }
 
-function ConsultaFolio() {
+export function ConsultaFolio() {
   const [folio, setFolio] = useState('')
   const [resultado, setResultado] = useState(undefined)
   const [buscando, setBuscando] = useState(false)
@@ -452,7 +454,7 @@ function ConsultaFolio() {
                 <dt>Pedido</dt>
                 <dd>
                   {resultado.pedido.productos.map((p) => `${p.cantidad}× ${p.nombre}`).join(', ')}
-                  {' · '}{resultado.pedido.pagado ? 'pagado' : `$${resultado.pedido.total} en efectivo al llegar`}
+                  {' · '}{resultado.pedido.pagado ? 'pagado' : `$${resultado.pedido.total} al llegar`}
                 </dd>
               </div>
             )}

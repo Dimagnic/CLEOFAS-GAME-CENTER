@@ -6,7 +6,7 @@ import { useAuth, traducirError } from '../../lib/AuthContext'
 import { useMiSocio, progreso, pesos, fechaCorta, ETIQUETA_MOV, campanasDeHoy, fechaDia } from '../../lib/socios'
 import { errorDeUrl } from './Acceso'
 import { MisCupones, Novedades, MisReservas } from './Club'
-import Particulas from '../../components/Particulas'
+import CuentaMarco from './CuentaMarco'
 import '../admin/admin.css'
 import './cuenta.css'
 
@@ -65,23 +65,8 @@ export default function MiCuenta() {
   }
 
   return (
-    <div className="cuenta">
-      <Particulas />
-      <header className="cuenta__top">
-        <div className="cuenta__wrap cuenta__top-row">
-          <Link to="/" className="cuenta__brand">
-            <img src="/logo.jpg" alt="" width="34" height="34" />
-            <span>CLUB <em>CLEOFAS</em></span>
-          </Link>
-          <nav className="cuenta__nav">
-            <a href="/#reservar">Reservar</a>
-            {esEquipo && <Link to="/panel">Panel</Link>}
-            <button onClick={salir}>Salir</button>
-          </nav>
-        </div>
-      </header>
+    <CuentaMarco>
 
-      <main className="cuenta__wrap cuenta__main">
         {aviso && <p className="cuenta-ok cuenta-ok--banner" onClick={() => setAviso('')}>{aviso}</p>}
 
         {cargando ? (
@@ -159,6 +144,11 @@ export default function MiCuenta() {
               </section>
             </div>
 
+            <nav className="cuenta-accesos">
+              <Link to="/reservar"><b>Reservar</b><span>Aparta tu estación y deja listo tu snack</span></Link>
+              <Link to="/cuenta/tienda"><b>Tienda</b><span>{rangos.find((r) => r.id === socio.rango_id)?.desc_snacks ? `Snacks y bebidas con −${rangos.find((r) => r.id === socio.rango_id).desc_snacks}%` : 'Snacks y bebidas para recoger'}</span></Link>
+              <Link to="/cuenta/pedidos"><b>Mis pedidos</b><span>Tu QR para pagar y recoger</span></Link>
+            </nav>
             <MisReservas uid={socio.user_id} />
             <MisCupones cupones={cupones} />
             <Novedades publicaciones={publicaciones} />
@@ -223,7 +213,6 @@ export default function MiCuenta() {
             <MisDatos socio={socio} onGuardado={recargar} />
           </>
         )}
-      </main>
 
       {qrGrande && socio && (
         <div className="cuenta-modal" onClick={() => setQrGrande(false)} role="dialog" aria-label="QR de socio">
@@ -235,7 +224,7 @@ export default function MiCuenta() {
           </div>
         </div>
       )}
-    </div>
+    </CuentaMarco>
   )
 }
 

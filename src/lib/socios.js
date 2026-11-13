@@ -19,7 +19,8 @@ export function progreso(rangos, puntos, rangoId) {
   return { actual, siguiente, faltan: siguiente.min_puntos - puntos, avance }
 }
 
-export const conDescuento = (precio, pct) => Math.max(0, Math.round(precio - (precio * (pct || 0)) / 100))
+// Igual que la base de datos: primero se redondea el descuento, luego se resta
+export const conDescuento = (precio, pct) => Math.max(0, precio - Math.round((precio * (pct || 0)) / 100))
 export const pesos = (n) => `$${Number(n || 0).toLocaleString('es-MX', { maximumFractionDigits: 2 })}`
 export const fechaCorta = (iso) =>
   new Date(iso).toLocaleString('es-MX', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Mexico_City' })

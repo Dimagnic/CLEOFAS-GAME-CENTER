@@ -33,25 +33,18 @@ async function socioDe(req) {
   }
 }
 
-// Productos de tienda agregados a la reserva. Precios y descuento los calcula el servidor.
-// Devuelve { lineas, subtotal, descuento, total } o { error }.
-async function armarPedido(productos, pctSnacks) {
+// Productos de tienda agregados a la reserva: [{ id, cantidad }] (precios y existencias los valida la base de datos)
+function productosValidos(productos) {
   if (!Array.isArray(productos) || productos.length === 0) return null
-  const cantidades = new Map()
-  for (const p of productos.slice(0, 30)) {
+  if (productos.length > 30) return { error: 'Demasiados productos.' }
+  const items = []
+  for (const p of productos) {
     const id = String(p?.id ?? '')
-    const cant = Math.trunc(Number(p?.cantidad))
-    if (!/^[0-9a-f-]{36}$/i.test(id) || !(cant >= 1)) return { error: 'Revisa los productos de tu pedido.' }
-    cantidades.set(id, Math.min(20, (cantidades.get(id) ?? 0) + cant))
+    const cantidad = Math.trunc(Number(p?.cantidad))
+    if (!/^[0-9a-f-]{36}$/i.test(id) || !(cantidad >= 1 && cantidad <= 20)) return { error: 'Revisa los productos de tu pedido.' }
+    items.push({ producto_id: id, cantidad })
   }
-  if (cantidades.size > 15) return { error: 'Puedes agregar hasta 15 productos distintos.' }
-  const { data, error } = await db().from('productos').select('id, nombre, precio').in('id', [...cantidades.keys()]).eq('activo', true)
-  if (error) throw error
-  if (data.length !== cantidades.size) return { error: 'Algún producto de tu pedido ya no está disponible. Actualiza la página.' }
-  const lineas = data.map((p) => ({ producto_id: p.id, nombre: p.nombre, precio_unit: Number(p.precio), cantidad: cantidades.get(p.id) }))
-  const subtotal = lineas.reduce((s, l) => s + l.precio_unit * l.cantidad, 0)
-  const descuento = Math.round((subtotal * pctSnacks) / 100)
-  return { lineas, subtotal, descuento, total: subtotal - descuento }
+  return { items }
 }
 
 // POST /api/checkout  →  crea la reservación (apartada 31 min) y la sesión de pago de Stripe.
@@ -84,22 +77,15 @@ export default async function handler(req, res) {
       const base = precioBase - descuento
       descuentoCupon = Math.min(base, cupon.tipo === 'porcentaje' ? Math.round((base * Number(cupon.valor)) / 100) : Number(cupon.valor))
     }
-    // Pedido de tienda (opcional) y cómo lo paga: junto con la reserva o en efectivo el día de la visita
-    const pedido = await armarPedido(b.productos, Math.min(50, Math.max(0, Number(socio?.rangos?.desc_snacks) || 0)))
+    // Pedido de tienda (opcional): se paga EN LÍNEA con la reserva o PRESENCIAL (efectivo, terminal o QR) al llegar
+    const pedido = productosValidos(b.productos)
     if (pedido?.error) return json(res, 400, { error: pedido.error })
-    const pagoProductos = pedido ? b.pagoProductos : null
-    if (pedido && !['en_linea', 'efectivo'].includes(pagoProductos)) {
-      return json(res, 400, { error: 'Elige cómo quieres pagar tus productos: en línea o en efectivo en tu visita.' })
-    }
-    const productosEnLinea = pagoProductos === 'en_linea' ? pedido.total : 0
+    const pagoProductos = pedido ? (b.pagoProductos === 'en_linea' ? 'en_linea' : ['presencial', 'efectivo'].includes(b.pagoProductos) ? 'presencial' : null) : null
+    if (pedido && !pagoProductos) return json(res, 400, { error: 'Elige cómo quieres pagar tus productos: en línea o al llegar.' })
 
     let montoHoras = precioBase - descuento - descuentoCupon
     // Si con el cupón las horas quedan en menos del mínimo de Stripe, el resto también va por cuenta del cupón.
-    if (cupon && montoHoras < MINIMO_STRIPE && productosEnLinea === 0) { descuentoCupon += montoHoras; montoHoras = 0 }
-    const monto = montoHoras + productosEnLinea // lo que se cobra en línea ahora
-    if (monto > 0 && monto < MINIMO_STRIPE) {
-      return json(res, 400, { error: `El pago en línea mínimo es de $${MINIMO_STRIPE}. Elige pagar tus productos en efectivo en tu visita.` })
-    }
+    if (cupon && montoHoras < MINIMO_STRIPE && pagoProductos !== 'en_linea') { descuentoCupon += montoHoras; montoHoras = 0 }
     const expiraEn = new Date(ahora + CFG.HOLD_MIN * 60000)
 
     await limpiarVencidas(b.estacion)
@@ -127,15 +113,11 @@ export default async function handler(req, res) {
           duracion_h: dur,
           inicio: inicio.toISOString(),
           fin: fin.toISOString(),
-          monto,
+          monto: montoHoras,
           estado: 'pendiente_pago',
           expires_at: expiraEn.toISOString(),
           ...(socio ? { socio_id: socio.user_id, descuento } : {}),
           ...(cupon ? { cupon_id: cupon.id, descuento_cupon: descuentoCupon } : {}),
-          ...(pedido ? {
-            snacks_subtotal: pedido.subtotal, snacks_descuento: pedido.descuento, snacks_total: pedido.total,
-            snacks_pago: pagoProductos, snacks_estado: 'pendiente',
-          } : {}),
         })
         .select('id, folio')
         .single()
@@ -146,15 +128,37 @@ export default async function handler(req, res) {
     }
     if (!reserva) throw new Error('No se pudo generar un folio único')
 
+    // El pedido se crea como venta pendiente (aparta existencias). Se paga con la reserva o al llegar.
+    let venta = null
     if (pedido) {
-      const { error } = await db().from('reserva_productos').insert(pedido.lineas.map((l) => ({ ...l, reservacion_id: reserva.id })))
+      const { data, error } = await db().rpc('crear_pedido', {
+        p_socio: socio?.user_id ?? null, p_items: pedido.items, p_pago_preferido: pagoProductos, p_cupon: null,
+        p_reservacion: reserva.id,
+        p_vence: pagoProductos === 'en_linea' ? expiraEn.toISOString() : new Date(fin.getTime() + 6 * 3600000).toISOString(),
+        p_cliente: String(b.cliente).trim(),
+      })
       if (error) {
         await db().from('reservaciones').update({ estado: 'cancelada' }).eq('id', reserva.id)
-        throw error
+        return json(res, error.code === 'P0001' ? 409 : 500, { error: error.code === 'P0001' ? error.message : 'No pudimos apartar tus productos.' })
       }
+      venta = data
+    }
+    const productosEnLinea = venta && pagoProductos === 'en_linea' ? Number(venta.total) : 0
+    const monto = montoHoras + productosEnLinea // lo que se cobra en línea ahora
+    if (monto > 0 && monto < MINIMO_STRIPE) {
+      await db().from('reservaciones').update({ estado: 'cancelada' }).eq('id', reserva.id)
+      return json(res, 400, { error: `El pago en línea mínimo es de $${MINIMO_STRIPE}. Elige pagar tus productos al llegar.` })
+    }
+    if (venta) {
+      // Campos de resumen (correo y consulta de folio)
+      await db().from('reservaciones').update({
+        monto, snacks_total: venta.total, snacks_subtotal: venta.subtotal, snacks_descuento: venta.descuento_socio,
+        snacks_pago: pagoProductos === 'en_linea' ? 'en_linea' : 'efectivo',
+      }).eq('id', reserva.id)
     }
 
     const sitio = sitioURL(req)
+    const volver = b.volver === '/reservar' ? '/reservar' : '/'
 
     // Cubierta por completo con cupón: se confirma sin pasar por Stripe (la base canjea el cupón y suma puntos).
     if (monto === 0) {
@@ -163,7 +167,7 @@ export default async function handler(req, res) {
         .eq('id', reserva.id).eq('estado', 'pendiente_pago')
       if (error) throw error
       await enviarConfirmacionSegura(reserva.id, sitio)
-      return json(res, 200, { url: `${sitio}/?pago=ok&folio=${reserva.folio}#reservar`, folio: reserva.folio, gratis: true })
+      return json(res, 200, { url: `${sitio}${volver}?pago=ok&folio=${reserva.folio}${volver === '/' ? '#reservar' : ''}`, folio: reserva.folio, gratis: true })
     }
 
     try {
@@ -189,8 +193,8 @@ export default async function handler(req, res) {
               currency: 'mxn',
               unit_amount: Math.round(productosEnLinea * 100),
               product_data: {
-                name: `Productos de tienda${pedido.descuento ? ' (descuento de socio)' : ''}`,
-                description: pedido.lineas.map((l) => `${l.cantidad}× ${l.nombre}`).join(', ').slice(0, 480),
+                name: `Productos de tienda · pedido ${venta.folio}${Number(venta.descuento_socio) ? ' (descuento de socio)' : ''}`,
+                description: `Se entregan en tu visita. Folio ${venta.folio}`,
               },
             },
           }] : []),
@@ -199,8 +203,8 @@ export default async function handler(req, res) {
         expires_at: Math.floor(expiraEn.getTime() / 1000),
         // Queda registrado en Stripe qué versión de las políticas aceptó el cliente.
         metadata: { reservacion_id: reserva.id, folio: reserva.folio, politicas_version: LEGAL.version },
-        success_url: `${sitio}/?pago=ok&folio=${reserva.folio}#reservar`,
-        cancel_url: `${sitio}/?pago=cancelado&folio=${reserva.folio}#reservar`,
+        success_url: `${sitio}${volver}?pago=ok&folio=${reserva.folio}${volver === '/' ? '#reservar' : ''}`,
+        cancel_url: `${sitio}${volver}?pago=cancelado&folio=${reserva.folio}${volver === '/' ? '#reservar' : ''}`,
       })
 
       await db().from('reservaciones').update({ stripe_session_id: session.id }).eq('id', reserva.id)

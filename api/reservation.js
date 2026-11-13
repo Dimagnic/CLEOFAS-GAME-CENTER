@@ -1,7 +1,7 @@
 import { db, stripe, json, sitioURL } from './_lib/comun.js'
 import { enviarConfirmacionSegura } from './_lib/correo.js'
 
-const CAMPOS = 'id, folio, cliente, estacion, fecha, hora, duracion_h, estado, monto, stripe_session_id, expires_at, snacks_total, snacks_pago, snacks_estado'
+const CAMPOS = 'id, folio, cliente, estacion, fecha, hora, duracion_h, estado, monto, stripe_session_id, expires_at, snacks_total, snacks_pago, snacks_estado, venta_id'
 
 function publica(r) {
   return {
@@ -18,6 +18,7 @@ function publica(r) {
       total: Number(r.snacks_total),
       pago: r.snacks_pago,
       pagado: r.snacks_estado === 'pagado',
+      folio: r.venta_folio ?? null,
     } : null,
   }
 }
@@ -32,7 +33,10 @@ export default async function handler(req, res) {
     const { data: r, error } = await db().from('reservaciones').select(CAMPOS).eq('folio', folio).maybeSingle()
     if (error) throw error
     if (!r) return json(res, 404, { error: 'No encontramos ese folio.' })
-    if (r.snacks_pago) {
+    if (r.venta_id) {
+      const { data: v } = await db().from('ventas').select('folio, total, estado, pago_preferido, venta_items(nombre, cantidad)').eq('id', r.venta_id).maybeSingle()
+      if (v) Object.assign(r, { productos: v.venta_items, snacks_total: v.total, snacks_pago: v.pago_preferido === 'en_linea' ? 'en_linea' : 'efectivo', snacks_estado: v.estado === 'pagada' ? 'pagado' : 'pendiente', venta_folio: v.folio })
+    } else if (r.snacks_pago) {
       const { data: productos } = await db().from('reserva_productos').select('nombre, cantidad').eq('reservacion_id', r.id).order('nombre')
       r.productos = productos ?? []
     }
