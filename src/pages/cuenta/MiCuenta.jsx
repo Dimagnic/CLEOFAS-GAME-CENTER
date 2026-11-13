@@ -3,9 +3,8 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import QRCode from 'qrcode'
 import { supabase, supabaseReady } from '../../lib/supabaseClient'
 import { useAuth, traducirError } from '../../lib/AuthContext'
-import { useMiSocio, progreso, pesos, fechaCorta, ETIQUETA_MOV, campanasDeHoy, fechaDia } from '../../lib/socios'
+import { useMiSocio, progreso, pesos, fechaCorta, ETIQUETA_MOV } from '../../lib/socios'
 import { errorDeUrl } from './Acceso'
-import { MisCupones, Novedades } from './Club'
 import Particulas from '../../components/Particulas'
 import '../admin/admin.css'
 import './cuenta.css'
@@ -32,13 +31,11 @@ function CodigoQR({ codigo }) {
 
 export default function MiCuenta() {
   const { esEquipo, signOut } = useAuth()
-  const { cargando, session, socio, rangos, movimientos, cupones, publicaciones, error, recargar } = useMiSocio()
+  const { cargando, session, socio, rangos, movimientos, error, recargar } = useMiSocio()
   const navigate = useNavigate()
   const location = useLocation()
   const [aviso, setAviso] = useState(location.state?.aviso || '')
   const [qrGrande, setQrGrande] = useState(false)
-  const [campanas, setCampanas] = useState([])
-  useEffect(() => { if (session) campanasDeHoy().then(setCampanas) }, [session?.user?.id])
   const bienvenida = new URLSearchParams(location.search).get('bienvenida')
 
   useEffect(() => { window.scrollTo(0, 0) }, [])
@@ -110,16 +107,6 @@ export default function MiCuenta() {
               </div>
             </section>
 
-            {campanas.length > 0 && (
-              <div className="cuenta-campana">
-                <b>x{Math.max(...campanas.map((c) => Number(c.multiplicador)))}</b>
-                <div>
-                  <strong>¡Hoy tus puntos valen más!</strong>
-                  <span>{campanas.map((c) => `${c.nombre} (x${Number(c.multiplicador)} en ${c.aplica === 'todo' ? 'todo' : c.aplica})`).join(' · ')}</span>
-                </div>
-              </div>
-            )}
-
             <div className="cuenta-grid">
               <section className="cuenta-carnet" style={{ '--rango': p?.actual?.color || '#9FB0CC' }}>
                 <div className="cuenta-carnet__brillo" aria-hidden="true" />
@@ -158,9 +145,6 @@ export default function MiCuenta() {
                 </div>
               </section>
             </div>
-
-            <MisCupones cupones={cupones} />
-            <Novedades publicaciones={publicaciones} />
 
             <div className="cuenta-grid">
               <section className="cuenta-panel">
@@ -238,8 +222,6 @@ export default function MiCuenta() {
   )
 }
 
-const fechaCumple = (d) => new Date(`${d}T12:00:00Z`).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', timeZone: 'UTC' })
-
 function MisDatos({ socio, onGuardado }) {
   const [abierto, setAbierto] = useState(false)
   const [msg, setMsg] = useState('')
@@ -255,9 +237,7 @@ function MisDatos({ socio, onGuardado }) {
     if (nombre.length < 2) return setError('Escribe tu nombre.')
     if (telefono && (telefono.length < 8 || telefono.length > 15)) return setError('El teléfono no parece válido.')
     setGuardando(true)
-    const cambios = { nombre, telefono: telefono || null, acepta_correos: Boolean(f.get('correos')) }
-    if (!socio.fecha_nacimiento && f.get('fecha_nacimiento')) cambios.fecha_nacimiento = f.get('fecha_nacimiento')
-    const { error } = await supabase.from('socios').update(cambios).eq('user_id', socio.user_id)
+    const { error } = await supabase.from('socios').update({ nombre, telefono: telefono || null }).eq('user_id', socio.user_id)
     let errClave = null
     const clave = String(f.get('password') || '')
     if (!error && clave) {
@@ -279,25 +259,12 @@ function MisDatos({ socio, onGuardado }) {
         <button className="cuenta-link" onClick={() => setAbierto((v) => !v)}>{abierto ? 'Cerrar' : 'Editar'}</button>
       </div>
       {!abierto ? (
-        <p className="cuenta-muted">
-          {socio.nombre} · {socio.email}{socio.telefono ? ` · ${socio.telefono}` : ''}
-          {socio.fecha_nacimiento ? ` · 🎂 ${fechaCumple(socio.fecha_nacimiento)}` : ''}
-          {' · '}{socio.acepta_correos === false ? 'sin avisos por correo' : 'recibe avisos por correo'}
-        </p>
+        <p className="cuenta-muted">{socio.nombre} · {socio.email}{socio.telefono ? ` · ${socio.telefono}` : ''}</p>
       ) : (
         <form className="cuenta-form" onSubmit={onSubmit}>
           <label>Nombre<input name="nombre" defaultValue={socio.nombre} maxLength={80} required /></label>
           <label>Teléfono<input name="telefono" type="tel" defaultValue={socio.telefono ?? ''} /></label>
           <label>Correo<input value={socio.email} disabled /></label>
-          <label>Cumpleaños {socio.fecha_nacimiento ? '' : '(solo se puede capturar una vez)'}
-            {socio.fecha_nacimiento
-              ? <input value={fechaCumple(socio.fecha_nacimiento)} disabled />
-              : <input name="fecha_nacimiento" type="date" min="1920-01-01" max={new Date().toISOString().slice(0, 10)} />}
-          </label>
-          <label className="cuenta-check cuenta-check--form">
-            <input type="checkbox" name="correos" defaultChecked={socio.acepta_correos !== false} />
-            <span>Recibir por correo mis cupones, promociones y eventos</span>
-          </label>
           <label>Contraseña nueva (opcional)<input name="password" type="password" minLength={8} placeholder="Déjala vacía para no cambiarla" autoComplete="new-password" /></label>
           {error && <p className="admin-login__error">{error}</p>}
           {msg && <p className="cuenta-ok">{msg}</p>}

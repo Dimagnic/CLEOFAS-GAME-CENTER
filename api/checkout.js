@@ -3,19 +3,6 @@ import {
   precioPorHoras, validarReserva, inicioMX, chocaConBloques, hhmm,
 } from './_lib/comun.js'
 import { LEGAL } from '../src/data/negocio.js'
-import { enviarConfirmacionSegura } from './_lib/correo.js'
-
-const MINIMO_STRIPE = 10 // Stripe no cobra menos de $10 MXN
-
-// Cupón del socio para horas: suyo, disponible, vigente y sin otra reserva pendiente que lo esté usando.
-async function cuponValido(cuponId, socioId, ahora) {
-  if (!/^[0-9a-f-]{36}$/i.test(String(cuponId))) return null
-  const { data: c } = await db().from('cupones').select('*').eq('id', cuponId).eq('socio_id', socioId).eq('estado', 'disponible').maybeSingle()
-  if (!c || (c.vence_at && new Date(c.vence_at).getTime() <= ahora) || !['horas', 'todo'].includes(c.aplica)) return null
-  const { data: otras } = await db().from('reservaciones').select('id, expires_at')
-    .eq('cupon_id', cuponId).eq('estado', 'pendiente_pago').gt('expires_at', new Date(ahora).toISOString())
-  return otras?.length ? null : c
-}
 
 // Si quien reserva es socio con sesión iniciada (manda su token), se aplica el descuento de su rango.
 // Si algo falla al revisarlo, se cobra el precio normal: nunca bloquea el pago.
@@ -55,17 +42,7 @@ export default async function handler(req, res) {
     const socio = await socioDe(req)
     const pct = Math.min(50, Math.max(0, Number(socio?.rangos?.desc_horas) || 0))
     const descuento = Math.round((precioBase * pct) / 100)
-    let cupon = null
-    let descuentoCupon = 0
-    if (b.cuponId && socio) {
-      cupon = await cuponValido(b.cuponId, socio.user_id, ahora)
-      if (!cupon) return json(res, 400, { error: 'Ese cupón ya no está disponible. Quítalo e intenta de nuevo.' })
-      const base = precioBase - descuento
-      descuentoCupon = Math.min(base, cupon.tipo === 'porcentaje' ? Math.round((base * Number(cupon.valor)) / 100) : Number(cupon.valor))
-    }
-    let monto = precioBase - descuento - descuentoCupon
-    // Si queda menos del mínimo que acepta Stripe, el resto también va por cuenta del cupón: la reserva es gratis.
-    if (cupon && monto < MINIMO_STRIPE) { descuentoCupon += monto; monto = 0 }
+    const monto = precioBase - descuento
     const expiraEn = new Date(ahora + CFG.HOLD_MIN * 60000)
 
     await limpiarVencidas(b.estacion)
@@ -97,7 +74,6 @@ export default async function handler(req, res) {
           estado: 'pendiente_pago',
           expires_at: expiraEn.toISOString(),
           ...(socio ? { socio_id: socio.user_id, descuento } : {}),
-          ...(cupon ? { cupon_id: cupon.id, descuento_cupon: descuentoCupon } : {}),
         })
         .select('id, folio')
         .single()
@@ -109,17 +85,6 @@ export default async function handler(req, res) {
     if (!reserva) throw new Error('No se pudo generar un folio único')
 
     const sitio = sitioURL(req)
-
-    // Cubierta por completo con cupón: se confirma sin pasar por Stripe (la base canjea el cupón y suma puntos).
-    if (monto === 0) {
-      const { error } = await db().from('reservaciones')
-        .update({ estado: 'confirmada', paid_at: new Date().toISOString(), expires_at: null })
-        .eq('id', reserva.id).eq('estado', 'pendiente_pago')
-      if (error) throw error
-      await enviarConfirmacionSegura(reserva.id, sitio)
-      return json(res, 200, { url: `${sitio}/?pago=ok&folio=${reserva.folio}#reservar`, folio: reserva.folio, gratis: true })
-    }
-
     try {
       const session = await stripe().checkout.sessions.create({
         mode: 'payment',
@@ -131,7 +96,7 @@ export default async function handler(req, res) {
             currency: 'mxn',
             unit_amount: Math.round(monto * 100),
             product_data: {
-              name: `Cleofas Game Center · ${b.estacion} · ${dur} h${descuento ? ` · socio ${socio.rangos?.nombre ?? ''} -${pct}%` : ''}${cupon ? ` · cupón ${cupon.codigo}` : ''}`,
+              name: `Cleofas Game Center · ${b.estacion} · ${dur} h${descuento ? ` · socio ${socio.rangos?.nombre ?? ''} -${pct}%` : ''}`,
               description: `${b.fecha} de ${hhmm(ini)} a ${hhmm(ini + dur * 60)} · Folio ${reserva.folio}`,
             },
           },

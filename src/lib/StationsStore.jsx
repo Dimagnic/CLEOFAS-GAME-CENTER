@@ -109,11 +109,11 @@ export function StationsProvider({ children }) {
   }
 
   // socio (opcional): se aplica su descuento en horas y la sesión le suma puntos al cerrarla.
-  function iniciarSesion(id, { cliente, tarifaId, socio, descuentoCupon = 0 }) {
+  function iniciarSesion(id, { cliente, tarifaId, socio }) {
     const tarifa = TARIFAS_SESION.find((t) => t.id === tarifaId)
     if (!tarifa) { setErrorSync('Esa tarifa no se puede usar para una sesión.'); return Promise.resolve() }
     const finMs = Date.now() + MINUTOS[tarifaId] * 60000
-    const precio = Math.max(0, conDescuento(tarifa.precio, socio?.rangos?.desc_horas) - descuentoCupon)
+    const precio = conDescuento(tarifa.precio, socio?.rangos?.desc_horas)
     const descuento = tarifa.precio - precio
     const nombre = cliente || socio?.nombre || 'Cliente'
     return guardar(id, {

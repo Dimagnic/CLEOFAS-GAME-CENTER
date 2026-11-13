@@ -107,7 +107,6 @@ export function Registro() {
     const email = String(f.get('email')).trim().toLowerCase()
     const telefono = String(f.get('telefono') || '').replace(/\D/g, '')
     const password = String(f.get('password'))
-    const fecha_nacimiento = String(f.get('fecha_nacimiento') || '')
     if (nombre.length < 2) return setError('Escribe tu nombre.')
     if (telefono && (telefono.length < 8 || telefono.length > 15)) return setError('El teléfono no parece válido.')
     if (password.length < 8) return setError('La contraseña debe tener al menos 8 caracteres.')
@@ -118,10 +117,7 @@ export function Registro() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: `${origen()}/cuenta?bienvenida=1`,
-        data: { nombre, telefono, fecha_nacimiento, acepta_correos: Boolean(f.get('correos')) },
-      },
+      options: { emailRedirectTo: `${origen()}/cuenta?bienvenida=1`, data: { nombre, telefono } },
     })
     setEnviando(false)
     if (error) return setError(traducirError(error))
@@ -147,19 +143,12 @@ export function Registro() {
         <form className="cuenta-acceso__form" onSubmit={onSubmit}>
           <label>Nombre<input name="nombre" required maxLength={80} placeholder="¿Cómo te llamas?" autoComplete="name" /></label>
           <label>Correo<input name="email" type="email" required placeholder="tu@correo.com" autoComplete="email" /></label>
-          <div className="cuenta-acceso__fila">
-            <label>Teléfono (opcional)<input name="telefono" type="tel" placeholder="56 4625 3958" autoComplete="tel" /></label>
-            <label>Cumpleaños (opcional)<input name="fecha_nacimiento" type="date" max={new Date().toISOString().slice(0, 10)} min="1920-01-01" autoComplete="bday" /></label>
-          </div>
+          <label>Teléfono (opcional)<input name="telefono" type="tel" placeholder="56 4625 3958" autoComplete="tel" /></label>
           <label>Contraseña<CampoClave autoComplete="new-password" placeholder="Mínimo 8 caracteres" minLength={8} /></label>
           <label>Repite la contraseña<CampoClave name="password2" autoComplete="new-password" placeholder="Igual que arriba" minLength={8} /></label>
           <label className="cuenta-check">
             <input type="checkbox" name="acepta" />
             <span>Acepto el <a href="/privacidad" target="_blank" rel="noopener noreferrer">Aviso de privacidad</a>.</span>
-          </label>
-          <label className="cuenta-check">
-            <input type="checkbox" name="correos" defaultChecked />
-            <span>Quiero recibir por correo mis cupones, promociones y eventos del club.</span>
           </label>
           {error && <p className="admin-login__error" role="alert">{error}</p>}
           <button className="btn btn-primary" disabled={enviando}>{enviando ? 'Creando cuenta…' : 'Crear mi cuenta'}</button>
