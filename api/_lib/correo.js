@@ -17,7 +17,8 @@ export async function enviarConfirmacion(reservacionId, sitio) {
   if (!r.email) return false
   const { data: est } = await db().from('estaciones').select('id, tipo, specs').eq('id', r.estacion).maybeSingle()
 
-  const { asunto, html, texto } = armarCorreo(r, est, sitio)
+  const { data: productos } = await db().from('reserva_productos').select('nombre, cantidad, precio_unit').eq('reservacion_id', r.id)
+  const { asunto, html, texto } = armarCorreo(r, est, sitio, productos ?? [])
   const copia = (process.env.EMAIL_COPIA || '').trim()
 
   const ctl = new AbortController()

@@ -232,3 +232,16 @@
 .cuenta-campana strong { display: block; font-family: var(--font-display); text-transform: uppercase; letter-spacing: .05em; }
 .cuenta-campana span { font-size: var(--step--1); color: var(--color-ink-muted); }
 @media (max-width: 860px) { .cuenta-acceso__fila { grid-template-columns: 1fr; } }
+
+/* Mis próximas reservas */
+.mis-reservas { display: flex; flex-direction: column; gap: 8px; }
+.mis-reservas__item { display: flex; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; padding: .8em 1em; border: 1px solid var(--color-line); border-left: 3px solid var(--color-ok); background: var(--color-bg); }
+.mis-reservas__item strong { display: block; font-family: var(--font-display); text-transform: uppercase; letter-spacing: .05em; }
+.mis-reservas__cuando { display: block; font-size: .85rem; color: var(--color-ink-muted); }
+.mis-reservas__cuando::first-letter { text-transform: uppercase; }
+.mis-reservas__item code { font-family: var(--font-mono); letter-spacing: .15em; color: var(--color-cyan); font-size: .8rem; }
+.mis-reservas__pedido { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; font-size: .82rem; color: var(--color-ink-muted); max-width: 420px; text-align: right; }
+.mis-reservas__pedido b { font-family: var(--font-mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; padding: .2em .55em; border: 1px solid currentColor; }
+.mis-reservas__pedido b.ok { color: var(--color-ok); }
+.mis-reservas__pedido b.efectivo { color: var(--color-warn); }
+@media (max-width: 860px) { .mis-reservas__pedido { align-items: flex-start; text-align: left; } }

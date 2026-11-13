@@ -195,3 +195,16 @@ Puesta en marcha:
 3. Despliega. En Vercel → Settings → Cron Jobs verás la tarea diaria.
 
 Límites de Resend en plan gratis: 100 correos al día y 3,000 al mes. Si tu club crece, sube de plan.
+
+## Productos de tienda en la reserva
+
+Al reservar, el cliente puede agregar snacks y bebidas ("Deja listo tu snack") y elegir **pagar en línea** (se cobran
+con la reserva en Stripe) o **en efectivo en su visita**. Antes de confirmar ve el desglose: lo que paga ahora y lo
+que paga al llegar. Los socios tienen su descuento de snacks. Los productos quedan ligados a la reserva, salen en el
+correo de confirmación, en la consulta de folio y en "Mis próximas reservas" del socio.
+
+Panel: en **Reservaciones** (columna "Pedido de tienda", filtro y total por cobrar), en **Estaciones** al llegar el
+cliente y en el **Resumen**. Botón **Cobrar $X** (efectivo: entra a la caja del día y suma puntos) y **Marcar entregado**.
+Puntos: los productos pagados en línea suman al confirmarse el pago; los de efectivo, al cobrarlos.
+
+Puesta en marcha: ejecuta `supabase/migration-pedidos.sql` (después de las fases 1, 2 y 3).

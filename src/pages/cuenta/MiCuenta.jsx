@@ -5,7 +5,7 @@ import { supabase, supabaseReady } from '../../lib/supabaseClient'
 import { useAuth, traducirError } from '../../lib/AuthContext'
 import { useMiSocio, progreso, pesos, fechaCorta, ETIQUETA_MOV, campanasDeHoy, fechaDia } from '../../lib/socios'
 import { errorDeUrl } from './Acceso'
-import { MisCupones, Novedades } from './Club'
+import { MisCupones, Novedades, MisReservas } from './Club'
 import Particulas from '../../components/Particulas'
 import '../admin/admin.css'
 import './cuenta.css'
@@ -159,6 +159,7 @@ export default function MiCuenta() {
               </section>
             </div>
 
+            <MisReservas uid={socio.user_id} />
             <MisCupones cupones={cupones} />
             <Novedades publicaciones={publicaciones} />
 

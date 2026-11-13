@@ -9,6 +9,7 @@ import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 import { conDescuento, cuponesDisponibles, descuentoCupon, textoCupon } from '../lib/socios'
 import FondoVideo from './FondoVideo'
+import PedidoTienda, { useProductosTienda, calcularPedido } from './PedidoTienda'
 import './Booking.css'
 
 export default function Booking() {
@@ -70,7 +71,7 @@ function useSocioReserva() {
   useEffect(() => {
     const uid = session?.user?.id
     if (!uid || session.demo) { setSocio(null); setCupones([]); return }
-    supabase.from('socios').select('nombre, email, telefono, rangos(nombre, desc_horas, color)').eq('user_id', uid).maybeSingle()
+    supabase.from('socios').select('nombre, email, telefono, rangos(nombre, desc_horas, desc_snacks, color)').eq('user_id', uid).maybeSingle()
       .then(({ data }) => setSocio(data ?? null), () => setSocio(null))
     cuponesDisponibles(uid, 'horas').then(setCupones, () => setCupones([]))
   }, [session?.user?.id])
@@ -133,14 +134,25 @@ function FormReserva() {
     return [...mapa.values()].sort((a, b) => a.min - b.min)
   }, [validos, fecha])
 
+  // Pedido de tienda (opcional) y cómo se paga
+  const productosTienda = useProductosTienda()
+  const [cantidades, setCantidades] = useState({})
+  const [pagoProductos, setPagoProductos] = useState(null)
+  const pedido = calcularPedido(productosTienda, cantidades, socio?.rangos?.desc_snacks || 0)
+  const productosEnLinea = pedido.piezas && pagoProductos === 'en_linea' ? pedido.total : 0
+  const productosEfectivo = pedido.piezas && pagoProductos === 'efectivo' ? pedido.total : 0
+
   const conRango = precio(duracion)
-  let total = conRango - descuentoCupon(cupon, conRango, 'horas')
-  if (cupon && total < 10) total = 0 // Stripe no cobra menos de $10: el cupón cubre el resto
+  let horasTotal = conRango - descuentoCupon(cupon, conRango, 'horas')
+  if (cupon && horasTotal < 10 && productosEnLinea === 0) horasTotal = 0 // Stripe no cobra menos de $10: el cupón cubre el resto
+  const total = horasTotal + productosEnLinea // lo que se paga ahora en línea
+  const minimoStripe = total > 0 && total < 10
+  const faltaPago = pedido.piezas > 0 && !pagoProductos
   const listo = estacion && inicio !== null && validos.includes(inicio)
 
   async function onSubmit(e) {
     e.preventDefault()
-    if (!listo || !acepta) return
+    if (!listo || !acepta || faltaPago || minimoStripe) return
     setError('')
     setPagando(true)
     const f = new FormData(e.target)
@@ -154,6 +166,7 @@ function FormReserva() {
           telefono: f.get('telefono'),
           estacion, fecha, inicioMin: inicio, duracion, aceptaPoliticas: acepta,
           ...(cupon ? { cuponId: cupon.id } : {}),
+          ...(pedido.piezas ? { productos: pedido.lineas.map((l) => ({ id: l.id, cantidad: l.cantidad })), pagoProductos } : {}),
         }),
       })
       window.location.href = url // pago seguro en Stripe
@@ -263,11 +276,29 @@ function FormReserva() {
           </select>
         </label>
       )}
-      {cupon && listo && (
-        <p className="booking__hint">
-          Precio {conRango !== precioPorHoras(duracion) ? `socio $${conRango}` : `$${conRango}`} − cupón ${conRango - total} = <strong>${total} MXN</strong>
-        </p>
+      <PedidoTienda
+        productos={productosTienda} cantidades={cantidades} setCantidades={setCantidades}
+        pago={pagoProductos} setPago={setPagoProductos} pctSnacks={socio?.rangos?.desc_snacks || 0} pedido={pedido}
+      />
+
+      {listo && (
+        <dl className="booking__cuenta">
+          <div>
+            <dt>{estacion} · {duracion} h{conRango !== precioPorHoras(duracion) ? ' (precio socio)' : ''}{cupon ? ` · cupón ${cupon.codigo}` : ''}</dt>
+            <dd>{horasTotal === 0 ? 'Gratis' : `$${horasTotal}`}</dd>
+          </div>
+          {pedido.piezas > 0 && (
+            <div>
+              <dt>Productos ({pedido.piezas}){pedido.descuento ? ` · −$${pedido.descuento} socio` : ''} · {pagoProductos === 'en_linea' ? 'pago en línea' : pagoProductos === 'efectivo' ? 'pago en efectivo' : 'elige cómo pagar'}</dt>
+              <dd>${pedido.total}</dd>
+            </div>
+          )}
+          <div className="booking__cuenta-total"><dt>Pagas ahora en línea</dt><dd>${total} MXN</dd></div>
+          {productosEfectivo > 0 && <div className="booking__cuenta-efectivo"><dt>Pagas en efectivo al llegar</dt><dd>${productosEfectivo} MXN</dd></div>}
+        </dl>
       )}
+      {faltaPago && <p className="booking__error">Elige cómo quieres pagar tus productos antes de confirmar.</p>}
+      {minimoStripe && <p className="booking__error">El pago en línea mínimo es de $10. Elige pagar tus productos en efectivo en tu visita.</p>}
 
       {error && <p className="booking__error" role="alert">{error}</p>}
 
@@ -279,8 +310,13 @@ function FormReserva() {
         </span>
       </label>
 
-      <button type="submit" className="btn btn-primary" disabled={!listo || !acepta || pagando}>
-        {pagando ? (total === 0 ? 'Confirmando…' : 'Redirigiendo al pago…') : !listo ? 'Elige estación y hora' : !acepta ? 'Acepta las políticas para continuar' : total === 0 ? 'Reservar gratis con mi cupón' : `Pagar $${total} MXN y reservar`}
+      <button type="submit" className="btn btn-primary" disabled={!listo || !acepta || pagando || faltaPago || minimoStripe}>
+        {pagando ? (total === 0 ? 'Confirmando…' : 'Redirigiendo al pago…')
+          : !listo ? 'Elige estación y hora'
+          : faltaPago ? 'Elige cómo pagar tus productos'
+          : !acepta ? 'Acepta las políticas para continuar'
+          : total === 0 ? (productosEfectivo ? `Confirmar reserva · $${productosEfectivo} en tu visita` : 'Reservar gratis con mi cupón')
+          : `Pagar $${total} MXN y reservar`}
       </button>
       <p className="booking__hint">
         Pago seguro con Stripe. Tu horario se aparta 30 minutos mientras pagas.
@@ -363,6 +399,12 @@ function Retorno({ retorno, onCerrar }) {
         <div><dt>Cuándo</dt><dd>{res.fecha} · {res.hora}</dd></div>
         <div><dt>Duración</dt><dd>{res.duracionH} h</dd></div>
         <div><dt>Pagado</dt><dd>${res.monto} MXN</dd></div>
+        {res.pedido && (
+          <>
+            <div><dt>Tu pedido</dt><dd>{res.pedido.productos.map((p) => `${p.cantidad}× ${p.nombre}`).join(', ')}</dd></div>
+            <div><dt>Productos</dt><dd>{res.pedido.pago === 'efectivo' ? `$${res.pedido.total} en efectivo al llegar` : 'Pagados en línea'}</dd></div>
+          </>
+        )}
       </dl>
       <p>Guarda tu folio y muéstralo al llegar. ¡Te esperamos con tu estación lista!</p>
       <p className="booking__hint">También te enviamos la confirmación por correo. Si no la ves en unos minutos, revisa la carpeta de spam o escríbenos por WhatsApp.</p>
@@ -405,6 +447,15 @@ function ConsultaFolio() {
             <div><dt>Estación</dt><dd>{resultado.estacion}</dd></div>
             <div><dt>Fecha</dt><dd>{resultado.fecha} · {resultado.hora}</dd></div>
             <div><dt>Estado</dt><dd className={`estado-pill estado-pill--${resultado.estado}`}>{ETIQUETAS[resultado.estado] ?? resultado.estado}</dd></div>
+            {resultado.pedido && (
+              <div>
+                <dt>Pedido</dt>
+                <dd>
+                  {resultado.pedido.productos.map((p) => `${p.cantidad}× ${p.nombre}`).join(', ')}
+                  {' · '}{resultado.pedido.pagado ? 'pagado' : `$${resultado.pedido.total} en efectivo al llegar`}
+                </dd>
+              </div>
+            )}
           </dl>
         </div>
       )}

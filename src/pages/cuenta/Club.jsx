@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { supabase } from '../../lib/supabaseClient'
 import { TIPOS_PUB, estadoCupon, textoCupon, fechaDia } from '../../lib/socios'
 
 const fechaEvento = (iso) =>
@@ -116,6 +117,46 @@ export function MisCupones({ cupones }) {
         </>
       )}
       {verTodos && otros.length > 0 && <div className="cupones cupones--historial">{otros.map((c) => <TarjetaCupon key={c.id} c={c} />)}</div>}
+    </section>
+  )
+}
+
+// Próximas reservas pagadas del socio, con su pedido de tienda
+export function MisReservas({ uid }) {
+  const [reservas, setReservas] = useState(null)
+  useEffect(() => {
+    if (!uid) return
+    const consulta = (campos) => supabase.from('reservaciones').select(campos)
+      .eq('socio_id', uid).eq('estado', 'confirmada').gte('fin', new Date().toISOString()).order('inicio').limit(10)
+    consulta('folio, estacion, inicio, fin, duracion_h, snacks_pago, snacks_estado, snacks_total, reserva_productos(nombre, cantidad)')
+      .then(({ data, error }) => (error ? consulta('folio, estacion, inicio, fin, duracion_h') : { data }))
+      .then(({ data }) => setReservas(data ?? []), () => setReservas([]))
+  }, [uid])
+
+  if (!reservas?.length) return null
+  const cuando = (iso) => new Date(iso).toLocaleString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'America/Mexico_City' })
+  return (
+    <section className="cuenta-panel">
+      <h2>Mis próximas reservas</h2>
+      <div className="mis-reservas">
+        {reservas.map((r) => (
+          <div key={r.folio} className="mis-reservas__item">
+            <div>
+              <strong>{r.estacion} · {r.duracion_h} h</strong>
+              <span className="mis-reservas__cuando">{cuando(r.inicio)}</span>
+              <code>{r.folio}</code>
+            </div>
+            {r.snacks_pago && (
+              <div className="mis-reservas__pedido">
+                <span>Tu pedido: {(r.reserva_productos ?? []).map((p) => `${p.cantidad}× ${p.nombre}`).join(', ')}</span>
+                <b className={r.snacks_estado === 'pagado' ? 'ok' : 'efectivo'}>
+                  {r.snacks_estado === 'pagado' ? 'Pagado' : `$${Number(r.snacks_total)} en efectivo al llegar`}
+                </b>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </section>
   )
 }

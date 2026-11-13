@@ -396,3 +396,21 @@
   .campana-form__dias { grid-column: 1 / -1; }
   .regla__campos { grid-template-columns: 1fr 1fr; }
 }
+
+/* ===== Pedidos de tienda en reservas ===== */
+.pedido-admin { display: flex; flex-direction: column; gap: 6px; font-size: .82rem; }
+.pedido-admin ul { list-style: none; margin: 0; padding: 0; color: var(--color-ink); }
+.pedido-admin ul b { color: var(--color-warn); font-family: var(--font-mono); font-weight: 400; }
+.pedido-admin__estado { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.pedido-admin__pill { font-family: var(--font-mono); font-size: .66rem; text-transform: uppercase; letter-spacing: .08em; padding: .2em .55em; border: 1px solid currentColor; }
+.pedido-admin--pagado .pedido-admin__pill { color: var(--color-ok); }
+.pedido-admin--efectivo .pedido-admin__pill { color: var(--color-warn); background: rgba(255, 178, 56, .1); }
+.pedido-admin--espera .pedido-admin__pill { color: var(--color-ink-faint); }
+.pedido-admin__pill--ok { color: var(--color-cyan) !important; background: none !important; }
+.pedido-admin__acciones { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+.pedido-admin--compacto { font-size: .78rem; }
+.admin-table__pedido { min-width: 200px; }
+.admin-filtro { display: flex; align-items: center; gap: 8px; margin-bottom: var(--space-2); font-size: var(--step--1); color: var(--color-ink-muted); cursor: pointer; }
+.admin-filtro input { accent-color: var(--color-accent); }
+.admin-station .pedido-admin { margin-top: 6px; }
+.admin-cards:has(> :nth-child(5)) { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }

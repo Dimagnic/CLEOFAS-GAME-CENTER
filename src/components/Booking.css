@@ -128,3 +128,40 @@
 .booking__socio b { color: var(--color-ok); }
 .booking__socio--invitado { border-left-color: var(--color-cyan); background: rgba(46, 196, 255, .06); }
 .booking__socio a { color: var(--color-cyan); text-decoration: underline; }
+
+/* ===== Pedido de tienda dentro de la reserva ===== */
+.pedido { border: 1px solid var(--color-line-strong); background: rgba(3, 5, 10, .45); }
+.pedido--con { border-color: rgba(255, 178, 56, .55); }
+.pedido__toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding: .8em 1em; text-align: left; }
+.pedido__toggle strong { display: block; font-family: var(--font-display); text-transform: uppercase; letter-spacing: .06em; color: var(--color-ink); }
+.pedido__toggle small { font-size: .8rem; color: var(--color-ink-muted); }
+.pedido--con .pedido__toggle small { color: var(--color-warn); }
+.pedido__toggle i { font-style: normal; font-size: 1.4rem; line-height: 1; color: var(--color-warn); width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid currentColor; flex: none; }
+.pedido__cuerpo { padding: 0 1em 1em; display: flex; flex-direction: column; gap: var(--space-2); }
+.pedido__socio { font-size: .8rem; color: var(--color-ink-muted); }
+.pedido__socio b { color: var(--color-ok); }
+.pedido__catnom { display: block; font-family: var(--font-mono); font-size: .68rem; text-transform: uppercase; letter-spacing: .14em; color: var(--color-ink-faint); margin-bottom: 6px; }
+.pedido__lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
+.pedido__item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: .55em .7em; border: 1px solid var(--color-line); background: var(--color-bg-raised); transition: border-color .15s; }
+.pedido__item.is-on { border-color: var(--color-warn); background: rgba(255, 178, 56, .07); }
+.pedido__item strong { display: block; font-weight: 500; font-size: .85rem; color: var(--color-ink); }
+.pedido__item span { font-family: var(--font-display); color: var(--color-cyan); }
+.pedido__cant { display: flex; align-items: center; gap: 6px; flex: none; }
+.pedido__cant button { width: 28px; height: 28px; border: 1px solid var(--color-line-strong); color: var(--color-ink); font-size: 1rem; line-height: 1; }
+.pedido__cant button:hover { border-color: var(--color-warn); color: var(--color-warn); }
+.pedido__cant b { min-width: 16px; text-align: center; font-family: var(--font-mono); }
+.pedido__pago { border: 0; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pedido__pago legend { font-family: var(--font-display); text-transform: uppercase; letter-spacing: .05em; font-size: .9rem; margin-bottom: 8px; color: var(--color-ink); }
+.pedido__pago label { display: flex !important; flex-direction: row !important; gap: 10px; align-items: flex-start; padding: .8em; border: 1px solid var(--color-line-strong); cursor: pointer; }
+.pedido__pago label.is-on { border-color: var(--color-accent-bright); background: rgba(255, 42, 42, .08); box-shadow: 0 0 18px rgba(255, 42, 42, .15); }
+.pedido__pago input { margin-top: 3px; accent-color: var(--color-accent); flex: none; }
+.pedido__pago strong { display: block; color: var(--color-ink); font-size: .9rem; }
+.pedido__pago small { font-size: .78rem; color: var(--color-ink-muted); line-height: 1.4; }
+
+.booking__cuenta { margin: 0; padding: .9em 1em; border: 1px solid var(--color-line-strong); background: rgba(3, 5, 10, .55); display: flex; flex-direction: column; gap: 6px; }
+.booking__cuenta > div { display: flex; justify-content: space-between; gap: var(--space-2); font-size: .85rem; color: var(--color-ink-muted); }
+.booking__cuenta dd { margin: 0; color: var(--color-ink); font-weight: 600; white-space: nowrap; }
+.booking__cuenta-total { border-top: 1px solid var(--color-line-strong); padding-top: 8px; margin-top: 2px; }
+.booking__cuenta-total dt, .booking__cuenta-total dd { font-family: var(--font-display); font-size: 1.15rem; color: var(--color-ink) !important; text-transform: uppercase; }
+.booking__cuenta-efectivo dt, .booking__cuenta-efectivo dd { color: var(--color-warn) !important; font-weight: 600; }
+@media (max-width: 720px) { .pedido__pago { grid-template-columns: 1fr; } }

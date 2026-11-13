@@ -3,6 +3,7 @@ import { useStations, TARIFAS_SESION, TARIFA_RESERVA } from '../../lib/StationsS
 import { conDescuento, descuentoCupon, canjearCupon } from '../../lib/socios'
 import SocioPicker from './SocioPicker'
 import CuponSelector from './CuponSelector'
+import PedidoAdmin from './PedidoAdmin'
 
 const MIN_TARIFA = { hora: 60, paq3: 180, paq5: 300 }
 const LLEGADA_ANTES_MIN = 60 // se puede registrar la llegada hasta 1 h antes de la reserva
@@ -11,6 +12,8 @@ const hora = (ms) => new Date(ms).toLocaleTimeString('es-MX', { hour: '2-digit',
 export default function StationsControl() {
   const { estaciones, errorSync, reservasDe, iniciarSesion, iniciarReserva, finalizarSesion, marcarMantenimiento, liberar } = useStations()
   const [abriendo, setAbriendo] = useState(null)
+  // Reserva en línea a la que pertenece la sesión (el folio va en el nombre del cliente)
+  const reservaEnCurso = (e) => reservasDe(e.id).find((r) => String(e.cliente ?? '').includes(r.folio))
 
   return (
     <div>
@@ -44,6 +47,7 @@ export default function StationsControl() {
                 <p className="admin-station__cliente">{e.cliente}</p>
                 <p className="admin-station__timer">{e.restanteMin} min restantes</p>
                 {e.tarifaId === TARIFA_RESERVA && <p className="admin-station__reserva">Pagada en línea · no cobrar</p>}
+                {e.tarifaId === TARIFA_RESERVA && reservaEnCurso(e)?.snacks_pago && <PedidoAdmin r={reservaEnCurso(e)} compacto />}
                 {e.tarifaId !== TARIFA_RESERVA && e.precio != null && (
                   <p className="admin-station__cobro">Cobrar ${e.precio}{e.socioId ? ` · socio${e.descuento ? ` (−$${e.descuento})` : ''}` : ''}</p>
                 )}
@@ -65,6 +69,7 @@ export default function StationsControl() {
             {reservasDe(e.id)[0] && (
               <p className="admin-station__reserva">
                 Reserva en línea: {hora(reservasDe(e.id)[0].iniMs)}–{hora(reservasDe(e.id)[0].finMs)} · {reservasDe(e.id)[0].cliente.split(' ')[0]}
+                {reservasDe(e.id)[0].snacks_pago && ` · 🛒 ${(reservasDe(e.id)[0].reserva_productos ?? []).reduce((s, p) => s + p.cantidad, 0)} productos`}
               </p>
             )}
 
@@ -153,6 +158,12 @@ function IniciarSesionModal({ estacionId, reserva, onClose, onConfirm, onLlegada
               Llegó {nombreReserva} · {reserva.folio}
             </button>
             <p>Ya pagó en línea: la sesión no se cobra y termina a las {hora(reserva.finMs)}.</p>
+          </div>
+        )}
+        {reserva?.snacks_pago && (
+          <div className="admin-modal__campo">
+            <span>Pedido de tienda de {nombreReserva}</span>
+            <PedidoAdmin r={reserva} />
           </div>
         )}
         <p className="admin-modal__sub">{puedeLlegar ? 'O inicia una sesión normal en mostrador:' : null}</p>

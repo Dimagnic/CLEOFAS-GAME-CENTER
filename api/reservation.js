@@ -1,7 +1,7 @@
 import { db, stripe, json, sitioURL } from './_lib/comun.js'
 import { enviarConfirmacionSegura } from './_lib/correo.js'
 
-const CAMPOS = 'id, folio, cliente, estacion, fecha, hora, duracion_h, estado, monto, stripe_session_id, expires_at'
+const CAMPOS = 'id, folio, cliente, estacion, fecha, hora, duracion_h, estado, monto, stripe_session_id, expires_at, snacks_total, snacks_pago, snacks_estado'
 
 function publica(r) {
   return {
@@ -13,6 +13,12 @@ function publica(r) {
     duracionH: r.duracion_h,
     estado: r.estado,
     monto: r.monto,
+    pedido: r.snacks_pago ? {
+      productos: (r.productos ?? []).map((p) => ({ nombre: p.nombre, cantidad: p.cantidad })),
+      total: Number(r.snacks_total),
+      pago: r.snacks_pago,
+      pagado: r.snacks_estado === 'pagado',
+    } : null,
   }
 }
 
@@ -26,6 +32,10 @@ export default async function handler(req, res) {
     const { data: r, error } = await db().from('reservaciones').select(CAMPOS).eq('folio', folio).maybeSingle()
     if (error) throw error
     if (!r) return json(res, 404, { error: 'No encontramos ese folio.' })
+    if (r.snacks_pago) {
+      const { data: productos } = await db().from('reserva_productos').select('nombre, cantidad').eq('reservacion_id', r.id).order('nombre')
+      r.productos = productos ?? []
+    }
 
     if (req.method === 'POST') {
       if (r.estado === 'pendiente_pago') {
@@ -51,6 +61,7 @@ export default async function handler(req, res) {
             .eq('estado', 'pendiente_pago')
             .select('id')
           r.estado = 'confirmada'
+          if (r.snacks_pago === 'en_linea') r.snacks_estado = 'pagado'
           if (actualizadas?.length) await enviarConfirmacionSegura(r.id, sitioURL(req)) // si el webhook no llegó primero
         }
       }

@@ -39,11 +39,11 @@ export function StationsProvider({ children }) {
   const cargar = useCallback(async () => {
     if (!enLinea) return
     const ahora = Date.now()
-    const [est, cie, res] = await Promise.all([
+    let [est, cie, res] = await Promise.all([
       supabase.from('estaciones').select('*').order('id'),
       supabase.from('cierres').select('*').gte('created_at', inicioDeHoyMX()).order('created_at', { ascending: false }),
       supabase.from('reservaciones')
-        .select('folio, estacion, cliente, inicio, fin, estado, expires_at')
+        .select('id, folio, estacion, cliente, inicio, fin, estado, expires_at, snacks_pago, snacks_estado, snacks_total, snacks_descuento, snacks_entregado_at, reserva_productos(nombre, cantidad)')
         .in('estado', ['confirmada', 'pendiente_pago'])
         .not('inicio', 'is', null)
         .gte('fin', new Date(ahora).toISOString())
@@ -60,12 +60,23 @@ export function StationsProvider({ children }) {
         tipo: c.tipo ?? 'sesion', detalle: c.detalle ?? '', socioId: c.socio_id ?? null, descuento: Number(c.descuento || 0),
       })))
     }
+    // Si la base aún no tiene pedidos de tienda (falta migration-pedidos.sql), se cargan las reservas sin ellos.
+    if (res.error) {
+      res = await supabase.from('reservaciones')
+        .select('id, folio, estacion, cliente, inicio, fin, estado, expires_at')
+        .in('estado', ['confirmada', 'pendiente_pago'])
+        .not('inicio', 'is', null)
+        .gte('fin', new Date(ahora).toISOString())
+        .lte('inicio', new Date(ahora + 7 * 24 * 3600000).toISOString())
+        .order('inicio')
+        .limit(50)
+    }
     if (!res.error) {
       setReservas(res.data
         // un pago pendiente que ya venció no bloquea nada
         .filter((r) => r.estado !== 'pendiente_pago' || !r.expires_at || new Date(r.expires_at).getTime() > ahora)
         .map((r) => ({
-          folio: r.folio, estacion: r.estacion, cliente: r.cliente, estado: r.estado,
+          ...r,
           iniMs: new Date(r.inicio).getTime(), finMs: new Date(r.fin).getTime(),
         })))
     }
@@ -193,7 +204,7 @@ export function StationsProvider({ children }) {
 
   return (
     <StationsContext.Provider
-      value={{ estaciones, cierresHoy, errorSync, enLinea, reservas, reservasDe, iniciarSesion, iniciarReserva, finalizarSesion, registrarVenta, marcarMantenimiento, liberar }}
+      value={{ estaciones, cierresHoy, errorSync, enLinea, reservas, reservasDe, iniciarSesion, iniciarReserva, finalizarSesion, registrarVenta, refrescar: cargar, marcarMantenimiento, liberar }}
     >
       {children}
     </StationsContext.Provider>

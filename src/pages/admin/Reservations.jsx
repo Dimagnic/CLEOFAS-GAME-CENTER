@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { RESERVACIONES } from '../../data/mockData'
 import { supabase, supabaseReady } from '../../lib/supabaseClient'
+import PedidoAdmin from './PedidoAdmin'
 
 const ETIQUETAS = {
   confirmada: 'pagada',
@@ -19,12 +20,14 @@ export default function Reservations() {
       setFilas(RESERVACIONES.map((r) => ({ ...r, duracion_h: r.duracionH })))
       return
     }
-    const { data, error } = await supabase
+    const consulta = (campos) => supabase
       .from('reservaciones')
-      .select('*')
+      .select(campos)
       .order('fecha', { ascending: false })
       .order('hora', { ascending: false })
       .limit(200)
+    let { data, error } = await consulta('*, reserva_productos(nombre, cantidad, precio_unit)')
+    if (error) ({ data, error } = await consulta('*')) // sin pedidos de tienda instalados
     if (error) setError(error.message)
     else setFilas(data)
   }
@@ -41,7 +44,12 @@ export default function Reservations() {
     else cargar()
   }
 
+  const [soloPedidos, setSoloPedidos] = useState(false)
   const pagadasHoy = (filas ?? []).filter((r) => r.estado === 'confirmada')
+  const porCobrar = pagadasHoy.filter((r) => r.snacks_pago === 'efectivo' && r.snacks_estado === 'pendiente')
+  const totalPorCobrar = porCobrar.reduce((s, r) => s + Number(r.snacks_total || 0), 0)
+  const conPedido = pagadasHoy.filter((r) => r.snacks_pago)
+  const visibles = (filas ?? []).filter((r) => !soloPedidos || r.snacks_pago)
   const totalPagado = pagadasHoy.reduce((s, r) => s + Number(r.monto || 0), 0)
 
   return (
@@ -61,7 +69,20 @@ export default function Reservations() {
             <p className="admin-card__label">Cobrado en línea</p>
             <p className="admin-card__value">${totalPagado}</p>
           </div>
+          <div className="admin-card">
+            <p className="admin-card__label">Reservas con pedido de tienda</p>
+            <p className="admin-card__value">{conPedido.length}</p>
+          </div>
+          <div className="admin-card">
+            <p className="admin-card__label">Por cobrar en efectivo</p>
+            <p className="admin-card__value">${totalPorCobrar}</p>
+          </div>
         </div>
+      )}
+      {supabaseReady && (
+        <label className="admin-filtro">
+          <input type="checkbox" checked={soloPedidos} onChange={(e) => setSoloPedidos(e.target.checked)} /> Ver solo reservas con pedido de tienda
+        </label>
       )}
 
       {error && <p className="admin-note">Error: {error}</p>}
@@ -72,11 +93,11 @@ export default function Reservations() {
           <thead>
             <tr>
               <th>Folio</th><th>Cliente</th><th>Contacto</th><th>Estación</th><th>Cuándo</th>
-              <th>Duración</th><th>Monto</th><th>Estado</th>{supabaseReady && <th></th>}
+              <th>Duración</th><th>Monto</th><th>Pedido de tienda</th><th>Estado</th>{supabaseReady && <th></th>}
             </tr>
           </thead>
           <tbody>
-            {filas.map((r) => (
+            {visibles.map((r) => (
               <tr key={r.folio}>
                 <td className="mono">{r.folio}</td>
                 <td>{r.cliente}</td>
@@ -85,6 +106,7 @@ export default function Reservations() {
                 <td>{r.fecha} · {String(r.hora).slice(0, 5)}</td>
                 <td>{r.duracion_h} h</td>
                 <td>{r.monto ? `$${r.monto}` : '—'}</td>
+                <td className="admin-table__pedido"><PedidoAdmin r={r} onCambio={cargar} compacto /></td>
                 <td><span className={`estado-pill estado-pill--${r.estado}`}>{ETIQUETAS[r.estado] ?? r.estado}</span></td>
                 {supabaseReady && (
                   <td>

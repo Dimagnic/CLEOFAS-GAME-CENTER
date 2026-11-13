@@ -1,5 +1,6 @@
 import { RESERVACIONES, RESUMEN_HOY } from '../../data/mockData'
 import { useStations } from '../../lib/StationsStore'
+import { estadoPedido } from './PedidoAdmin'
 
 const ETIQUETAS = { confirmada: 'pagada', pendiente_pago: 'esperando pago', pendiente: 'pendiente' }
 
@@ -16,7 +17,10 @@ export default function Dashboard() {
 
   // Con Supabase conectado todo es real; en modo demo se muestran datos de ejemplo.
   const proximas = enLinea
-    ? reservas.map((r) => ({ folio: r.folio, cliente: r.cliente, estacion: r.estacion, cuando: cuando(r.iniMs), estado: r.estado }))
+    ? reservas.map((r) => ({
+        folio: r.folio, cliente: r.cliente, estacion: r.estacion, cuando: cuando(r.iniMs), estado: r.estado,
+        pedido: r.snacks_pago ? `${(r.reserva_productos ?? []).map((p) => `${p.cantidad}× ${p.nombre}`).join(', ')} · ${estadoPedido(r)?.[1]}` : '—',
+      }))
     : RESERVACIONES.map((r) => ({ ...r, cuando: `${r.fecha} · ${r.hora}` }))
 
   const totalCobrado = cierresHoy.reduce((s, c) => s + (c.precio || 0), 0)
@@ -57,7 +61,7 @@ export default function Dashboard() {
         ) : (
           <table className="admin-table">
             <thead>
-              <tr><th>Folio</th><th>Cliente</th><th>Estación</th><th>Cuándo</th><th>Estado</th></tr>
+              <tr><th>Folio</th><th>Cliente</th><th>Estación</th><th>Cuándo</th><th>Pedido de tienda</th><th>Estado</th></tr>
             </thead>
             <tbody>
               {proximas.map((r) => (
@@ -66,6 +70,7 @@ export default function Dashboard() {
                   <td>{r.cliente}</td>
                   <td>{r.estacion}</td>
                   <td>{r.cuando}</td>
+                  <td>{r.pedido ?? '—'}</td>
                   <td><span className={`estado-pill estado-pill--${r.estado}`}>{ETIQUETAS[r.estado] ?? r.estado}</span></td>
                 </tr>
               ))}

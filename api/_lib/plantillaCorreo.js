@@ -8,7 +8,8 @@ const esc = (t) =>
 const mayus = (t) => t.charAt(0).toUpperCase() + t.slice(1)
 
 // r = fila de reservaciones, est = { id, tipo, specs } de la estación
-export function armarCorreo(r, est, sitio) {
+// productos = filas de reserva_productos (pedido de tienda, opcional)
+export function armarCorreo(r, est, sitio, productos = []) {
   const [h, m] = String(r.hora).split(':').map(Number)
   const ini = h * 60 + (m || 0)
   const fin = ini + r.duracion_h * 60
@@ -29,8 +30,14 @@ export function armarCorreo(r, est, sitio) {
     ['Fecha', fecha],
     ['Horario', horario],
     ['Duración', duracion],
-    ['Total pagado', monto],
+    ['Total pagado', Number(r.monto) > 0 ? monto : '$0 (cubierto con cupón)'],
   ]
+  if (productos.length) {
+    filas.push(['Tu pedido de tienda', productos.map((p) => `${p.cantidad}× ${p.nombre}`).join(', ')])
+    filas.push(r.snacks_pago === 'efectivo'
+      ? ['Pagas al llegar', `$${Number(r.snacks_total).toLocaleString('es-MX')} MXN en efectivo`]
+      : ['Pedido', `Pagado en línea ($${Number(r.snacks_total).toLocaleString('es-MX')} MXN incluido arriba)`])
+  }
 
   const html = `<!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
