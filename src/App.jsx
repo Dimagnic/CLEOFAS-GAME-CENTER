@@ -10,6 +10,8 @@ import Cashbox from './pages/admin/Cashbox'
 import Socios from './pages/admin/Socios'
 import Rangos from './pages/admin/Rangos'
 import Tienda from './pages/admin/Tienda'
+import Cupones from './pages/admin/Cupones'
+import Publicaciones from './pages/admin/Publicaciones'
 import { Entrar, Registro, Recuperar, NuevaContrasena } from './pages/cuenta/Acceso'
 import MiCuenta from './pages/cuenta/MiCuenta'
 import { AuthProvider } from './lib/AuthContext'
@@ -40,6 +42,8 @@ export default function App() {
               <Route path="tienda" element={<Tienda />} />
               <Route path="socios" element={<Socios />} />
               <Route path="rangos" element={<Rangos />} />
+              <Route path="cupones" element={<Cupones />} />
+              <Route path="publicaciones" element={<Publicaciones />} />
             </Route>
           </Routes>
         </BrowserRouter>

@@ -161,3 +161,17 @@ Puesta en marcha:
    agrega `https://TU-DOMINIO/cuenta` y `https://TU-DOMINIO/cuenta/nueva-contrasena` (y `http://localhost:5173/**` para pruebas).
 
 Puntos: la base de datos los suma sola (triggers), así que no se pueden duplicar ni manipular desde el navegador.
+
+## Club Cleofas — Fase 2: cupones y novedades
+
+**Cupones** (panel → Cupones): se emiten a un socio, a un rango y superiores, o a todo el club, con plantillas
+rápidas (1 hora gratis, snack gratis, 20% en snacks…). Tipo *monto* (hasta $X) o *porcentaje*, para horas, snacks
+o todo, con vigencia. El socio los ve en su cuenta y se canjean en **Estaciones** y **Tienda** al elegirlo:
+la base de datos garantiza que cada cupón se use una sola vez y nunca vencido. Se pueden anular.
+
+**Publicaciones** (panel → Publicaciones): promociones, eventos/torneos, noticias y comunicados con imagen,
+fecha del evento, botón (ej. inscripción por WhatsApp), exclusivas por rango, destacadas, programadas
+(mostrar desde / ocultar después de) y borradores. Vista previa en vivo.
+
+Puesta en marcha: en Supabase → SQL Editor ejecuta `supabase/migration-fase2.sql` (después de `migration-socios.sql`).
+Crea el bucket público `publicaciones` para subir imágenes; si tu proyecto no lo permite, pega enlaces de imagen.

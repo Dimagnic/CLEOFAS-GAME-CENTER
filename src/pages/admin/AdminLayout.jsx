@@ -11,6 +11,8 @@ const ICONOS = {
   tienda: 'M6 2h12l-1 20H7zM6 7h12',
   socios: 'M9 8a4 4 0 1 0 0-.01M2 21c1-4 4-6 7-6s6 2 7 6M17 11a3 3 0 1 0 0-.01M18 15c2 .5 3.5 2.5 4 5',
   rangos: 'M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z',
+  cupones: 'M3 7h18v4a2 2 0 0 0 0 4v4H3v-4a2 2 0 0 0 0-4zM10 7v12',
+  publicaciones: 'M4 4h16v16H4zM8 8h8M8 12h8M8 16h5',
 }
 
 const NAV = [
@@ -21,6 +23,8 @@ const NAV = [
   { to: '/panel/tienda', label: 'Tienda', ico: 'tienda' },
   { to: '/panel/socios', label: 'Socios', ico: 'socios' },
   { to: '/panel/rangos', label: 'Rangos', ico: 'rangos' },
+  { to: '/panel/cupones', label: 'Cupones', ico: 'cupones' },
+  { to: '/panel/publicaciones', label: 'Publicaciones', ico: 'publicaciones' },
 ]
 
 function Reloj() {

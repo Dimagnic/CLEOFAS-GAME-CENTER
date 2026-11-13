@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase, supabaseReady } from '../../lib/supabaseClient'
 import { useStations } from '../../lib/StationsStore'
-import { conDescuento, pesos } from '../../lib/socios'
+import { conDescuento, pesos, descuentoCupon, canjearCupon } from '../../lib/socios'
 import SocioPicker from './SocioPicker'
+import CuponSelector from './CuponSelector'
 
 export default function Tienda() {
   const { registrarVenta } = useStations()
@@ -10,6 +11,7 @@ export default function Tienda() {
   const [error, setError] = useState('')
   const [ticket, setTicket] = useState({}) // id → cantidad
   const [socio, setSocio] = useState(null)
+  const [cupon, setCupon] = useState(null)
   const [cobrando, setCobrando] = useState(false)
   const [ok, setOk] = useState('')
 
@@ -30,7 +32,9 @@ export default function Tienda() {
   const lineas = Object.entries(ticket).map(([id, cant]) => ({ p: productos.find((x) => x.id === id), cant })).filter((l) => l.p && l.cant > 0)
   const subtotal = lineas.reduce((s, l) => s + Number(l.p.precio) * l.cant, 0)
   const pct = socio?.rangos?.desc_snacks || 0
-  const total = conDescuento(subtotal, pct)
+  const conRango = conDescuento(subtotal, pct)
+  const dCupon = descuentoCupon(cupon, conRango, 'snacks')
+  const total = conRango - dCupon
 
   const sumar = (id, n) => setTicket((t) => ({ ...t, [id]: Math.max(0, (t[id] ?? 0) + n) }))
 
@@ -38,16 +42,18 @@ export default function Tienda() {
     if (!lineas.length) return
     setCobrando(true); setError(''); setOk('')
     try {
+      // El cupón se canjea primero: si ya se usó o venció, no se cobra con descuento.
+      if (cupon) await canjearCupon(cupon, 'Tienda', dCupon)
       await registrarVenta({
-        detalle: lineas.map((l) => `${l.cant}× ${l.p.nombre}`).join(', '),
+        detalle: lineas.map((l) => `${l.cant}× ${l.p.nombre}`).join(', ') + (cupon ? ` · cupón ${cupon.codigo}` : ''),
         total,
         descuento: subtotal - total,
         socio,
       })
       setOk(`Venta registrada: ${pesos(total)}${socio ? ` · +${Math.floor(total)} pts para ${socio.nombre || socio.email}` : ''}`)
-      setTicket({}); setSocio(null)
+      setTicket({}); setSocio(null); setCupon(null)
     } catch (e) {
-      setError(e.message)
+      setError(e.message); setCupon(null)
     } finally {
       setCobrando(false)
     }
@@ -113,15 +119,17 @@ export default function Tienda() {
             <span>Socio (opcional)</span>
             <SocioPicker value={socio} onChange={setSocio} tipoDescuento="snacks" />
           </div>
+          <CuponSelector socio={socio} contexto="snacks" subtotal={conRango} value={cupon} onChange={setCupon} />
           <dl className="tienda__totales">
             <div><dt>Subtotal</dt><dd>{pesos(subtotal)}</dd></div>
-            {pct > 0 && <div><dt>Descuento socio ({pct}%)</dt><dd>−{pesos(subtotal - total)}</dd></div>}
+            {pct > 0 && <div><dt>Descuento socio ({pct}%)</dt><dd>−{pesos(subtotal - conRango)}</dd></div>}
+            {dCupon > 0 && <div><dt>Cupón {cupon.codigo}</dt><dd>−{pesos(dCupon)}</dd></div>}
             <div className="tienda__total"><dt>Total</dt><dd>{pesos(total)}</dd></div>
           </dl>
           <button className="btn btn-primary" disabled={!lineas.length || cobrando} onClick={cobrar}>
             {cobrando ? 'Registrando…' : `Cobrar ${pesos(total)}`}
           </button>
-          {lineas.length > 0 && <button className="admin-link" onClick={() => { setTicket({}); setSocio(null) }}>Vaciar</button>}
+          {lineas.length > 0 && <button className="admin-link" onClick={() => { setTicket({}); setSocio(null); setCupon(null) }}>Vaciar</button>}
         </aside>
       </div>
 

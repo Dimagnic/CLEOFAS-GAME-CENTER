@@ -5,6 +5,7 @@ import { supabase, supabaseReady } from '../../lib/supabaseClient'
 import { useAuth, traducirError } from '../../lib/AuthContext'
 import { useMiSocio, progreso, pesos, fechaCorta, ETIQUETA_MOV } from '../../lib/socios'
 import { errorDeUrl } from './Acceso'
+import { MisCupones, Novedades } from './Club'
 import Particulas from '../../components/Particulas'
 import '../admin/admin.css'
 import './cuenta.css'
@@ -31,7 +32,7 @@ function CodigoQR({ codigo }) {
 
 export default function MiCuenta() {
   const { esEquipo, signOut } = useAuth()
-  const { cargando, session, socio, rangos, movimientos, error, recargar } = useMiSocio()
+  const { cargando, session, socio, rangos, movimientos, cupones, publicaciones, error, recargar } = useMiSocio()
   const navigate = useNavigate()
   const location = useLocation()
   const [aviso, setAviso] = useState(location.state?.aviso || '')
@@ -145,6 +146,9 @@ export default function MiCuenta() {
                 </div>
               </section>
             </div>
+
+            <MisCupones cupones={cupones} />
+            <Novedades publicaciones={publicaciones} />
 
             <div className="cuenta-grid">
               <section className="cuenta-panel">

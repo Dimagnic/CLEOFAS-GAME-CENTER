@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useStations, TARIFAS_SESION, TARIFA_RESERVA } from '../../lib/StationsStore'
-import { conDescuento } from '../../lib/socios'
+import { conDescuento, descuentoCupon, canjearCupon } from '../../lib/socios'
 import SocioPicker from './SocioPicker'
+import CuponSelector from './CuponSelector'
 
 const MIN_TARIFA = { hora: 60, paq3: 180, paq5: 300 }
 const LLEGADA_ANTES_MIN = 60 // se puede registrar la llegada hasta 1 h antes de la reserva
@@ -81,8 +82,10 @@ export default function StationsControl() {
           estacionId={abriendo}
           reserva={reservasDe(abriendo)[0]}
           onClose={() => setAbriendo(null)}
-          onConfirm={(datos) => {
-            iniciarSesion(abriendo, datos)
+          onConfirm={async (datos) => {
+            // El cupón se canjea primero: si ya se usó o venció, la sesión no se inicia con descuento.
+            if (datos.cupon) await canjearCupon(datos.cupon, `Sesión ${abriendo}`, datos.descuentoCupon)
+            await iniciarSesion(abriendo, datos)
             setAbriendo(null)
           }}
           onLlegada={(reserva) => {
@@ -98,7 +101,14 @@ export default function StationsControl() {
 function IniciarSesionModal({ estacionId, reserva, onClose, onConfirm, onLlegada }) {
   const [tarifaId, setTarifaId] = useState(TARIFAS_SESION[0].id)
   const [socio, setSocio] = useState(null)
+  const [cupon, setCupon] = useState(null)
+  const [enviando, setEnviando] = useState(false)
+  const [errorCupon, setErrorCupon] = useState('')
   const pct = socio?.rangos?.desc_horas || 0
+  const tarifa = TARIFAS_SESION.find((t) => t.id === tarifaId)
+  const conRango = conDescuento(tarifa.precio, pct)
+  const dCupon = descuentoCupon(cupon, conRango, 'horas')
+  const aCobrar = conRango - dCupon
 
   // ¿Hay una reserva en línea que se empalme con la sesión que estás por iniciar?
   const ahora = Date.now()
@@ -109,7 +119,7 @@ function IniciarSesionModal({ estacionId, reserva, onClose, onConfirm, onLlegada
   // Solo reservas pagadas, en curso o que empiezan pronto, pueden registrarse como "llegó".
   const puedeLlegar = reserva?.estado === 'confirmada' && reserva.iniMs - ahora <= LLEGADA_ANTES_MIN * 60000
 
-  function onSubmit(e) {
+  async function onSubmit(e) {
     e.preventDefault()
     const form = new FormData(e.target)
     if (choca(tarifaId)) {
@@ -118,7 +128,12 @@ function IniciarSesionModal({ estacionId, reserva, onClose, onConfirm, onLlegada
         : `Esta sesión terminaría después de las ${hora(reserva.iniMs)}, cuando empieza la reserva en línea de ${nombreReserva}. ¿Iniciar de todos modos?`
       if (!window.confirm(aviso)) return
     }
-    onConfirm({ cliente: String(form.get('cliente') || '').trim(), tarifaId, socio })
+    setEnviando(true); setErrorCupon('')
+    try {
+      await onConfirm({ cliente: String(form.get('cliente') || '').trim(), tarifaId, socio, cupon, descuentoCupon: dCupon })
+    } catch (err) {
+      setErrorCupon(err.message); setCupon(null); setEnviando(false)
+    }
   }
 
   return (
@@ -159,9 +174,17 @@ function IniciarSesionModal({ estacionId, reserva, onClose, onConfirm, onLlegada
             ))}
           </select>
         </label>
+        <CuponSelector socio={socio} contexto="horas" subtotal={conRango} value={cupon} onChange={setCupon} />
+        {errorCupon && <p className="admin-modal__aviso">{errorCupon}</p>}
+        {(socio || cupon) && (
+          <p className="admin-modal__total">
+            <span>A cobrar{tarifa.precio !== aCobrar ? ` (antes $${tarifa.precio})` : ''}</span>
+            <b>${aCobrar}</b>
+          </p>
+        )}
         <div className="admin-modal__actions">
           <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>Cancelar</button>
-          <button type="submit" className="btn btn-primary btn-sm">Iniciar</button>
+          <button type="submit" className="btn btn-primary btn-sm" disabled={enviando}>{enviando ? 'Iniciando…' : 'Iniciar'}</button>
         </div>
       </form>
     </div>
